@@ -56,7 +56,8 @@ No código, cada correção está marcada com `CORREÇÃO 4.1` e cada novidade c
 - **Indicador "Ativando…"** na janela e no Modo TV, com os botões travados enquanto troca (evita clique duplo).
 - **Áudio**: botão de **mudo**, **▶ Testar** cada saída (toca um som só naquele aparelho) e volume que acompanha mudanças feitas fora do app.
 - **Por modo**: *Liberar memória RAM* e *Tirar o cursor do meio da tela* (eram da v3, agora opcionais), além de **Duplicar** modo e escolher a cor que quiser.
-- **Ao restaurar**: escolher quais telas (automático, todas, não mexer, telas de um modo) e qual áudio.
+- **Ao restaurar**: interruptor para cada tela do PC (ligado = acesa, desligado = apagada), além de automático, todas, não mexer ou telas de um modo. Também dá para escolher qual áudio.
+- **Papel de parede**: aceita mais formatos (.jfif, .heic, .avif, .tif) e avisa se a imagem não abrir.
 - **Silenciar notificações do Windows** durante os modos (beta, volta como estava ao restaurar). É o "Modo Foco" da v3.
 - **Fecha o Big Picture da Steam** ao restaurar, se foi o modo que abriu (comportamento da v3).
 - **Backup**: exportar/importar tudo num arquivo. Os pareamentos do PC são mantidos, por segurança.

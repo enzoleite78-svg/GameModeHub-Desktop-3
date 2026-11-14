@@ -486,6 +486,19 @@
                                 <TextBlock Text="Telas" Width="170" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbRestTelas" Width="360" Height="36" HorizontalAlignment="Left" SelectionChanged="CmbRestaurar_SelectionChanged"/>
                             </DockPanel>
+                            <!-- NOVO 4.1.1: escolher tela por tela o que fica aceso ao restaurar -->
+                            <Border x:Name="BlocoTelasRestaurar" Visibility="Collapsed" Background="{DynamicResource Surface2Brush}" CornerRadius="12" Padding="16,14" Margin="170,10,0,4">
+                                <StackPanel>
+                                    <TextBlock Text="Ligado = tela acesa · Desligado = tela apagada" Style="{StaticResource Sub}" Margin="0,0,0,10"/>
+                                    <StackPanel x:Name="PainelTelasRestaurar"/>
+                                    <WrapPanel Margin="0,4,0,0">
+                                        <Button Style="{StaticResource BtnSecundario}" Background="{DynamicResource SurfaceBrush}" Content="↻  Atualizar lista" Click="BtnAtualizarTelasRestaurar_Click" Margin="0,0,8,0"/>
+                                        <Button Style="{StaticResource BtnSecundario}" Background="{DynamicResource SurfaceBrush}" Content="Usar as telas acesas agora" Click="BtnTelasRestaurarAgora_Click"
+                                                ToolTip="Marca exatamente as telas que estão ligadas neste momento"/>
+                                    </WrapPanel>
+                                    <TextBlock x:Name="TxtTelasRestaurar" Style="{StaticResource Sub}" Margin="0,10,0,0"/>
+                                </StackPanel>
+                            </Border>
                             <DockPanel Margin="0,10,0,0">
                                 <TextBlock Text="Áudio" Width="170" VerticalAlignment="Center"/>
                                 <ComboBox x:Name="CmbRestAudio" Width="360" Height="36" HorizontalAlignment="Left" SelectionChanged="CmbRestaurar_SelectionChanged"/>

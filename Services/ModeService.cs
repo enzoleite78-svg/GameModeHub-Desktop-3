@@ -32,6 +32,8 @@ namespace GameModeHub.Services
     /// <summary>Orquestra o que acontece ao ativar um modo e ao restaurar.</summary>
     public static class ModeService
     {
+        /// <summary>Id do layout de telas usado pelo Restaurar quando a opção é "Escolher quais telas acender".</summary>
+        public const string IdLayoutRestaurar = "__restaurar";
         private static readonly SemaphoreSlim _trava = new SemaphoreSlim(1, 1);
         private static EstadoModo _estado = new EstadoModo();
 
@@ -212,6 +214,14 @@ namespace GameModeHub.Services
         {
             opcao ??= "auto";
             if (opcao == "manter") return (true, null);
+            if (opcao == "escolher")
+            {
+                // NOVO 4.1.1: telas escolhidas uma a uma em Geral → Ao restaurar o desktop
+                var lay = ConfigService.Layouts.FirstOrDefault(l => l.Id == IdLayoutRestaurar);
+                if (lay == null || lay.TelasAtivas.Count == 0) return DisplayService.AcenderTodas();
+                var r = DisplayService.AplicarLayout(lay);
+                return r.ok ? r : DisplayService.AcenderTodas();
+            }
             if (opcao == "todas") return DisplayService.AcenderTodas();
             if (opcao.StartsWith("modo:"))
             {

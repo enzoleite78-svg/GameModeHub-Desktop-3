@@ -1087,8 +1087,24 @@ namespace GameModeHub
 
         private string EscolherImagem(string titulo)
         {
-            var dlg = new Microsoft.Win32.OpenFileDialog { Filter = "Imagens|*.jpg;*.jpeg;*.png;*.bmp;*.webp;*.gif", Title = titulo };
-            return dlg.ShowDialog(this) == true ? dlg.FileName : null;
+            // CORREÇÃO 4.1.1: a lista escondia formatos comuns (.jfif de imagens baixadas, .heic do iPhone, .avif, .tif)
+            var dlg = new Microsoft.Win32.OpenFileDialog
+            {
+                Filter = "Imagens|*.jpg;*.jpeg;*.jfif;*.png;*.bmp;*.webp;*.gif;*.tif;*.tiff;*.heic;*.heif;*.avif;*.ico|Todos os arquivos|*.*",
+                Title = titulo
+            };
+            if (dlg.ShowDialog(this) != true) return null;
+            // CORREÇÃO 4.1.1: antes, se a imagem não abria, nada acontecia e não aparecia aviso nenhum
+            if (WallpaperService.Carregar(dlg.FileName, 0, 64) == null)
+            {
+                var ext = Path.GetExtension(dlg.FileName).ToLowerInvariant();
+                var dica = ext is ".heic" or ".heif" or ".avif" or ".webp"
+                    ? "O Windows precisa da extensão gratuita desse formato (Microsoft Store: “Extensões de Imagem HEIF/AV1/Webp”), ou converta a foto para JPG/PNG."
+                    : "O arquivo pode estar corrompido ou não ser uma imagem. Tente salvar a foto como JPG ou PNG.";
+                ToastWindow.Mostrar("Não consegui abrir essa imagem", dica, "⚠");
+                return null;
+            }
+            return dlg.FileName;
         }
 
         private void BtnWallpaper_Click(object sender, RoutedEventArgs e)
@@ -1101,6 +1117,7 @@ namespace GameModeHub
             WallpaperService.LimparNaoUsados();
             _wpCarregado = "";
             CarregarAparencia();
+            ToastWindow.Mostrar("Papel de parede aplicado", "Ajuste o desfoque e o escurecer logo abaixo se quiser a imagem mais nítida.", "🖼");
         }
 
         private void BtnRemoverWallpaper_Click(object sender, RoutedEventArgs e)
@@ -1160,7 +1177,7 @@ namespace GameModeHub
             ChkAvisos.IsChecked = c.MostrarAvisos;
             ChkNotificacoes.IsChecked = c.SilenciarNotificacoes;
 
-            var telas = new List<Opcao> { new Opcao("auto", "Automático (telas do “Jogar no Monitor” ou todas)"), new Opcao("todas", "Acender todas as telas"), new Opcao("manter", "Não mexer nas telas") };
+            var telas = new List<Opcao> { new Opcao("escolher", "Escolher quais telas acender"), new Opcao("auto", "Automático (telas do “Jogar no Monitor” ou todas)"), new Opcao("todas", "Acender todas as telas"), new Opcao("manter", "Não mexer nas telas") };
             telas.AddRange(perfil.Modos.Where(m => m.Tela != "manter").Select(m => new Opcao("modo:" + m.Id, "Usar as telas do modo “" + m.Nome + "”")));
             CmbRestTelas.ItemsSource = telas;
             CmbRestTelas.SelectedItem = telas.FirstOrDefault(o => o.Valor == c.RestaurarTelas) ?? telas[0];
@@ -1179,6 +1196,93 @@ namespace GameModeHub
             TxtDados.Text = "Dados: " + Paths.DataDir + (Paths.Portable ? "  (modo portátil)" : "");
             _carregando = false;
             CarregarSaidas();
+            CarregarTelasRestaurar();
+        }
+
+        // ---- Telas ao restaurar (NOVO 4.1.1) ----
+        private async void CarregarTelasRestaurar()
+        {
+            bool mostrar = ConfigService.Atual.RestaurarTelas == "escolher";
+            BlocoTelasRestaurar.Visibility = mostrar ? Visibility.Visible : Visibility.Collapsed;
+            if (!mostrar) return;
+            PainelTelasRestaurar.Children.Clear();
+            PainelTelasRestaurar.Children.Add(new TextBlock { Text = "Procurando telas…", Style = (Style)FindResource("Sub") });
+            var telas = await Task.Run(() => DisplayService.Listar());
+            var lay = GarantirLayoutRestaurar(telas);
+            PainelTelasRestaurar.Children.Clear();
+
+            CheckBox Interruptor(string path, string nome, string info, bool marcado)
+            {
+                var cb = new CheckBox
+                {
+                    Style = (Style)FindResource("Interruptor"), Tag = new[] { path, nome }, Margin = new Thickness(0, 0, 0, 10), IsChecked = marcado,
+                    Content = new TextBlock { Inlines = { new System.Windows.Documents.Run(nome) { FontWeight = FontWeights.SemiBold }, new System.Windows.Documents.Run("   " + info) { Foreground = (Brush)FindResource("MutedBrush"), FontSize = 12 } } }
+                };
+                cb.Click += TelaRestaurar_Click;
+                return cb;
+            }
+            foreach (var t in telas)
+                PainelTelasRestaurar.Children.Add(Interruptor(t.Path, t.Nome, (t.Ativa ? "acesa agora" : "apagada agora") + (t.Principal ? " · principal" : ""),
+                    lay.TelasAtivas.Contains(t.Path, StringComparer.OrdinalIgnoreCase)));
+            // telas escolhidas que não estão conectadas agora continuam na lista para não perder a escolha
+            for (int i = 0; i < lay.TelasAtivas.Count; i++)
+            {
+                var p = lay.TelasAtivas[i];
+                if (telas.Any(t => string.Equals(t.Path, p, StringComparison.OrdinalIgnoreCase))) continue;
+                PainelTelasRestaurar.Children.Add(Interruptor(p, i < lay.NomesAtivos.Count ? lay.NomesAtivos[i] : "Tela", "desconectada agora (TV desligada?)", true));
+            }
+            if (PainelTelasRestaurar.Children.Count == 0)
+                PainelTelasRestaurar.Children.Add(new TextBlock { Text = "Nenhuma tela encontrada.", Style = (Style)FindResource("Sub") });
+            AtualizarTextoTelasRestaurar(lay);
+        }
+
+        /// <summary>Na primeira vez, começa com as telas que estão acesas agora.</summary>
+        private static LayoutTelas GarantirLayoutRestaurar(List<TelaInfo> telas)
+        {
+            var lay = ConfigService.Layouts.FirstOrDefault(l => l.Id == ModeService.IdLayoutRestaurar);
+            if (lay != null && lay.TelasAtivas.Count > 0) return lay;
+            var base_ = telas.Where(t => t.Ativa).ToList();
+            if (base_.Count == 0) base_ = telas;
+            if (lay == null) { lay = new LayoutTelas { Id = ModeService.IdLayoutRestaurar, Nome = "Ao restaurar" }; ConfigService.Layouts.Add(lay); }
+            lay.TelasAtivas = base_.Select(t => t.Path).ToList();
+            lay.NomesAtivos = base_.Select(t => t.Nome).ToList();
+            lay.PrincipalPath = base_.FirstOrDefault(t => t.Principal)?.Path ?? lay.TelasAtivas.FirstOrDefault() ?? "";
+            ConfigService.Salvar(true);
+            return lay;
+        }
+
+        private void TelaRestaurar_Click(object sender, RoutedEventArgs e)
+        {
+            var marc = PainelTelasRestaurar.Children.OfType<CheckBox>().Where(c => c.IsChecked == true).ToList();
+            if (marc.Count == 0)
+            {
+                ((CheckBox)sender).IsChecked = true;
+                ToastWindow.Mostrar("Deixe pelo menos uma tela acesa", "Senão o desktop ficaria sem nenhuma tela.", "⚠");
+                return;
+            }
+            var lay = ConfigService.Layouts.FirstOrDefault(l => l.Id == ModeService.IdLayoutRestaurar);
+            if (lay == null) { lay = new LayoutTelas { Id = ModeService.IdLayoutRestaurar, Nome = "Ao restaurar" }; ConfigService.Layouts.Add(lay); }
+            lay.TelasAtivas = marc.Select(c => ((string[])c.Tag)[0]).ToList();
+            lay.NomesAtivos = marc.Select(c => ((string[])c.Tag)[1]).ToList();
+            lay.PrincipalPath = lay.TelasAtivas[0];
+            ConfigService.Salvar(true);
+            AtualizarTextoTelasRestaurar(lay);
+        }
+
+        private void AtualizarTextoTelasRestaurar(LayoutTelas lay)
+        {
+            var apagadas = PainelTelasRestaurar.Children.OfType<CheckBox>().Where(c => c.IsChecked != true).Select(c => ((string[])c.Tag)[1]).ToList();
+            TxtTelasRestaurar.Text = "✔ Ao restaurar, ficam acesas: " + string.Join(" + ", lay.NomesAtivos) +
+                                     (apagadas.Count > 0 ? "   ·   apagadas: " + string.Join(" + ", apagadas) : "");
+        }
+
+        private void BtnAtualizarTelasRestaurar_Click(object sender, RoutedEventArgs e) => CarregarTelasRestaurar();
+
+        private void BtnTelasRestaurarAgora_Click(object sender, RoutedEventArgs e)
+        {
+            var lay = ConfigService.Layouts.FirstOrDefault(l => l.Id == ModeService.IdLayoutRestaurar);
+            if (lay != null) lay.TelasAtivas.Clear();     // GarantirLayoutRestaurar refaz com as telas acesas agora
+            CarregarTelasRestaurar();
         }
 
         private async void CarregarSaidas()
@@ -1229,6 +1333,7 @@ namespace GameModeHub
             if (CmbRestTelas.SelectedItem is Opcao t) c.RestaurarTelas = t.Valor;
             if (CmbRestAudio.SelectedItem is Opcao a) c.RestaurarAudio = a.Valor;
             ConfigService.Salvar(true);
+            if (sender == CmbRestTelas) CarregarTelasRestaurar();
         }
 
         private void ChkNotificacoes_Click(object sender, RoutedEventArgs e) { ConfigService.Atual.SilenciarNotificacoes = ChkNotificacoes.IsChecked == true; ConfigService.Salvar(true); }
