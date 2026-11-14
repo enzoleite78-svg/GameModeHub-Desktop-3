@@ -1,0 +1,555 @@
+<Window x:Class="GameModeHub.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:v="clr-namespace:GameModeHub.Views"
+        Title="GameModeHub" Width="1140" Height="760" MinWidth="960" MinHeight="620"
+        WindowStartupLocation="CenterScreen" Background="{DynamicResource BgBrush}"
+        FontFamily="{StaticResource UiFont}" Foreground="{DynamicResource TextBrush}" UseLayoutRounding="True" SnapsToDevicePixels="True">
+
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="232"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- Wallpaper (desfoque real vem do slider) -->
+        <Image x:Name="Fundo" Grid.ColumnSpan="2" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <Rectangle x:Name="Escuro" Grid.ColumnSpan="2" Fill="Black" Opacity="0" IsHitTestVisible="False"/>
+
+        <!-- ================= BARRA LATERAL ================= -->
+        <Border Grid.Column="0" Background="{DynamicResource SidebarBrush}" BorderBrush="{DynamicResource LineBrush}" BorderThickness="0,0,1,0" Padding="14,18">
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Top" Orientation="Horizontal" Margin="6,0,0,20">
+                    <Border Width="36" Height="36" CornerRadius="11" Background="{DynamicResource AccentBrush}">
+                        <TextBlock Text="🎮" FontSize="18" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="GameModeHub" FontSize="15.5" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="TxtVersaoLateral" Text="v4.1" FontSize="11" Foreground="{DynamicResource MutedBrush}"/>
+                    </StackPanel>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Top" Margin="2,0,2,16">
+                    <TextBlock Text="PERFIL" FontSize="10.5" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}" Margin="4,0,0,6"/>
+                    <ComboBox x:Name="CmbPerfil" Height="38" SelectionChanged="CmbPerfil_SelectionChanged"
+                              ToolTip="Cada perfil tem seus próprios modos e lista de programas. Crie e renomeie em Geral → Perfis."/>
+                </StackPanel>
+
+                <StackPanel DockPanel.Dock="Bottom">
+                    <Button x:Name="BtnModoTv" Style="{StaticResource BtnPrimario}" Content="📺  Abrir Modo TV" Click="BtnModoTv_Click" Padding="16,11"
+                            ToolTip="Tela cheia para usar no sofá só com o controle (também abre segurando o botão Xbox por 3,5 s)"/>
+                    <Border Style="{StaticResource Chip}" Margin="0,10,0,0" Padding="10,8" CornerRadius="10">
+                        <TextBlock x:Name="TxtControle" FontSize="12" Text="🎮 Nenhum controle" Foreground="{DynamicResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
+                    </Border>
+                </StackPanel>
+
+                <StackPanel>
+                    <RadioButton x:Name="NavInicio" Style="{StaticResource NavItem}" GroupName="nav" Tag="inicio" Content="🏠   Início" IsChecked="True" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavCelular" Style="{StaticResource NavItem}" GroupName="nav" Tag="celular" Content="📱   Celular" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavProgramas" Style="{StaticResource NavItem}" GroupName="nav" Tag="programas" Content="🧩   Programas" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavControles" Style="{StaticResource NavItem}" GroupName="nav" Tag="controles" Content="🕹   Controle e atalhos" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavAparencia" Style="{StaticResource NavItem}" GroupName="nav" Tag="aparencia" Content="🎨   Aparência" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavGeral" Style="{StaticResource NavItem}" GroupName="nav" Tag="geral" Content="⚙   Geral" Checked="Nav_Checked"/>
+                </StackPanel>
+            </DockPanel>
+        </Border>
+
+        <!-- ================= CONTEÚDO ================= -->
+        <Grid Grid.Column="1">
+
+            <!-- ===== INÍCIO ===== -->
+            <ScrollViewer x:Name="PgInicio" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="1000" HorizontalAlignment="Left">
+                    <DockPanel Margin="0,0,0,20">
+                        <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                            <Border Style="{StaticResource Chip}" ToolTip="Uso do processador agora"><TextBlock x:Name="TxtCpu" Text="CPU —" FontSize="12"/></Border>
+                            <Border Style="{StaticResource Chip}" Margin="6,0,0,0" ToolTip="Memória em uso"><TextBlock x:Name="TxtRam" Text="RAM —" FontSize="12"/></Border>
+                        </StackPanel>
+                        <StackPanel>
+                            <TextBlock x:Name="TxtSaudacao" Text="Início" Style="{StaticResource Titulo}"/>
+                            <TextBlock Text="Escolha como quer jogar. O GameModeHub cuida de telas, áudio e programas." Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+                        </StackPanel>
+                    </DockPanel>
+
+                    <!-- trabalhando -->
+                    <Border x:Name="BannerTrabalhando" Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="Collapsed" BorderBrush="{DynamicResource AccentBrush}" Padding="18,14">
+                        <StackPanel Orientation="Horizontal">
+                            <Control Style="{StaticResource Spinner}"/>
+                            <TextBlock x:Name="TxtTrabalhando" Margin="12,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- primeiros passos -->
+                    <Border x:Name="CardGuia" Style="{StaticResource Card}" Margin="0,0,0,18" Visibility="Collapsed">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource BtnTexto}" Content="Ocultar" Click="BtnOcultarGuia_Click" VerticalAlignment="Top"/>
+                                <TextBlock Text="✨  Primeiros passos" FontSize="16" FontWeight="SemiBold"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Sub}" Text="Ajustes rápidos para tudo funcionar do jeito certo. Cada item some daqui quando estiver feito." Margin="0,3,0,12"/>
+                            <StackPanel x:Name="ListaGuia"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- agora -->
+                    <Border Style="{StaticResource Card}" Margin="0,0,0,24">
+                        <DockPanel>
+                            <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Center">
+                                <Button x:Name="BtnAcender" Style="{StaticResource BtnSecundario}" Content="💡  Acender todas as telas" Click="BtnAcender_Click" Margin="0,0,8,0"
+                                        ToolTip="Botão de emergência: liga todas as telas conectadas (use se alguma tela ficou apagada)"/>
+                                <Button x:Name="BtnRestaurar" Style="{StaticResource BtnSecundario}" Content="↩  Restaurar desktop" Click="BtnRestaurar_Click"
+                                        ToolTip="Desfaz o modo: volta telas, áudio, energia e reabre os programas que foram fechados"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <Grid Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,14,0">
+                                    <Ellipse x:Name="HaloEstado" Fill="{DynamicResource MutedBrush}" Opacity="0.25" Width="14" Height="14"/>
+                                    <Ellipse x:Name="PontoEstado" Fill="{DynamicResource MutedBrush}" Width="8" Height="8"/>
+                                </Grid>
+                                <StackPanel>
+                                    <TextBlock Text="AGORA" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock x:Name="TxtEstado" Text="Desktop normal" FontSize="19" FontWeight="SemiBold" Margin="0,1,0,0"/>
+                                </StackPanel>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <DockPanel Margin="0,0,0,10">
+                        <TextBlock DockPanel.Dock="Right" Style="{StaticResource Sub}" VerticalAlignment="Bottom"
+                                   Text="Clique para ativar  ·  ✎ edita  ·  botão direito: mais opções"/>
+                        <TextBlock Text="MODOS" Style="{StaticResource Rotulo}" Margin="0"/>
+                    </DockPanel>
+                    <WrapPanel x:Name="PainelModos"/>
+
+                    <TextBlock Text="ÁUDIO" Style="{StaticResource Rotulo}" Margin="0,14,0,8"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Button DockPanel.Dock="Right" Style="{StaticResource BtnTexto}" Content="Configurar saídas…" Click="BtnIrSaidas_Click" VerticalAlignment="Center"/>
+                                <WrapPanel>
+                                    <RadioButton x:Name="AudioA" Style="{StaticResource Segmento}" GroupName="aud" Content="A" Checked="Audio_Click" Tag="A" ToolTip="Saída A (ex.: fones)"/>
+                                    <RadioButton x:Name="AudioB" Style="{StaticResource Segmento}" GroupName="aud" Content="B" Checked="Audio_Click" Tag="B" ToolTip="Saída B (ex.: TV / caixas)"/>
+                                </WrapPanel>
+                            </DockPanel>
+                            <DockPanel Margin="0,10,0,0">
+                                <Button x:Name="BtnMudo" DockPanel.Dock="Left" Style="{StaticResource BtnIcone}" Content="🔊" Click="BtnMudo_Click" Margin="0,0,14,0" ToolTip="Silenciar / reativar o som"/>
+                                <TextBlock x:Name="TxtVolume" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center" Text="—" FontWeight="SemiBold"/>
+                                <Slider x:Name="SldVolume" Minimum="0" Maximum="100" ValueChanged="SldVolume_ValueChanged" VerticalAlignment="Center" SmallChange="1" LargeChange="5"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== EDITAR MODO ===== -->
+            <ScrollViewer x:Name="PgModo" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="780" HorizontalAlignment="Left">
+                    <Button x:Name="BtnVoltar" Style="{StaticResource BtnSecundario}" Content="←  Voltar" HorizontalAlignment="Left" Click="BtnVoltar_Click" ToolTip="Voltar sem salvar (Esc)"/>
+                    <TextBlock x:Name="TxtTituloEditor" Text="Editar modo" Style="{StaticResource Titulo}" Margin="0,16,0,0"/>
+                    <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0" Text="Tudo aqui acontece quando você ativa o modo. O “Restaurar desktop” desfaz."/>
+
+                    <TextBlock Text="NOME" Style="{StaticResource Rotulo}"/>
+                    <TextBox x:Name="EdNome" MaxLength="40" Tag="Ex.: Jogar na TV"/>
+
+                    <TextBlock Text="QUAIS TELAS FICAM ACESAS" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <WrapPanel>
+                                <RadioButton x:Name="EdTelaManter" Style="{StaticResource Segmento}" GroupName="tela" Content="Manter como está"/>
+                                <RadioButton x:Name="EdTelaLayout" Style="{StaticResource Segmento}" GroupName="tela" Content="Só as que eu marcar"/>
+                                <RadioButton x:Name="EdTelaExtend" Style="{StaticResource Segmento}" GroupName="tela" Content="Estender (todas)"/>
+                                <RadioButton x:Name="EdTelaClone" Style="{StaticResource Segmento}" GroupName="tela" Content="Duplicar"/>
+                            </WrapPanel>
+                            <StackPanel x:Name="BlocoTelas" Margin="0,8,0,0">
+                                <StackPanel x:Name="PainelTelas"/>
+                                <Button x:Name="BtnAtualizarTelas" Style="{StaticResource BtnSecundario}" Content="↻  Atualizar lista de telas" HorizontalAlignment="Left" Margin="0,4,0,0" Click="BtnAtualizarTelas_Click"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,10,0,0"
+                                       Text="As telas são reconhecidas pelo próprio monitor/TV, então não trocam de lugar quando o Windows reordena. As que você não marcar ficam apagadas neste modo. Se algo der errado, o app volta como estava."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="ÁUDIO" Style="{StaticResource Rotulo}"/>
+                    <WrapPanel>
+                        <RadioButton x:Name="EdAudioNenhum" Style="{StaticResource Segmento}" GroupName="eda" Content="Não mexer"/>
+                        <RadioButton x:Name="EdAudioA" Style="{StaticResource Segmento}" GroupName="eda" Content="Saída A"/>
+                        <RadioButton x:Name="EdAudioB" Style="{StaticResource Segmento}" GroupName="eda" Content="Saída B"/>
+                    </WrapPanel>
+                    <TextBlock x:Name="TxtAudioEditor" Style="{StaticResource Sub}" Margin="2,2,0,0"/>
+
+                    <TextBlock Text="AO ATIVAR, ABRIR" Style="{StaticResource Rotulo}"/>
+                    <StackPanel Orientation="Horizontal">
+                        <ComboBox x:Name="EdLauncher" SelectionChanged="EdLauncher_SelectionChanged" Width="300" Height="38"/>
+                        <Button x:Name="BtnEscolherLauncher" Style="{StaticResource BtnSecundario}" Content="Escolher programa…" Margin="8,0,0,0" Click="BtnEscolherLauncher_Click"/>
+                    </StackPanel>
+                    <TextBlock x:Name="TxtLauncherDet" Style="{StaticResource Sub}" Margin="2,6,0,0"/>
+
+                    <TextBlock Text="OPÇÕES" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="EdHdr" Style="{StaticResource Interruptor}" Content="Ligar HDR nas telas acesas (se a tela suportar)"/>
+                            <CheckBox x:Name="EdGentil" Style="{StaticResource Interruptor}" Margin="0,12,0,0"
+                                      Content="Pedir para fechar os programas antes de forçar (salva abas e trabalhos)"/>
+                            <CheckBox x:Name="EdLiberarRam" Style="{StaticResource Interruptor}" Margin="0,12,0,0"
+                                      Content="Liberar memória RAM dos programas em segundo plano"/>
+                            <CheckBox x:Name="EdEsconderCursor" Style="{StaticResource Interruptor}" Margin="0,12,0,0"
+                                      Content="Tirar o cursor do mouse do meio da tela"/>
+                            <DockPanel Margin="0,16,0,0">
+                                <TextBlock Text="Plano de energia" VerticalAlignment="Center" Width="150"/>
+                                <ComboBox x:Name="EdEnergia" Width="260" Height="36" HorizontalAlignment="Left"/>
+                            </DockPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <TextBlock Text="Atalho de teclado" VerticalAlignment="Center" Width="150"/>
+                                <TextBox x:Name="EdAtalho" Width="260" v:HotkeyBox.Ativo="True"
+                                         ToolTip="Clique e aperte a tecla. Funciona até dentro do jogo. Ex.: NumPad1, F6, Ctrl+Alt+G"/>
+                                <Button Style="{StaticResource BtnTexto}" Content="Limpar" Click="BtnLimparAtalho_Click" VerticalAlignment="Center" Margin="6,0,0,0"/>
+                            </StackPanel>
+                            <TextBlock x:Name="TxtAvisoAtalho" Style="{StaticResource Sub}" Margin="150,6,0,0" Foreground="{DynamicResource DangerBrush}" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="COR" Style="{StaticResource Rotulo}"/>
+                    <WrapPanel x:Name="PainelCores"/>
+
+                    <WrapPanel Margin="0,26,0,12">
+                        <Button x:Name="BtnSalvarModo" Style="{StaticResource BtnPrimario}" Content="✔  Salvar" Click="BtnSalvarModo_Click" Margin="0,0,8,8" ToolTip="Ctrl+S"/>
+                        <Button x:Name="BtnTestarModo" Style="{StaticResource BtnSecundario}" Content="▶  Salvar e testar agora" Click="BtnTestarModo_Click" Margin="0,0,8,8"/>
+                        <Button x:Name="BtnAtalhoDesktop" Style="{StaticResource BtnSecundario}" Content="🖱  Atalho na área de trabalho" Click="BtnAtalhoDesktop_Click" Margin="0,0,8,8"
+                                ToolTip="Cria um ícone na área de trabalho que ativa este modo com dois cliques"/>
+                        <Button x:Name="BtnDuplicarModo" Style="{StaticResource BtnSecundario}" Content="⧉  Duplicar" Click="BtnDuplicarModo_Click" Margin="0,0,8,8"/>
+                        <Button x:Name="BtnExcluirModo" Style="{StaticResource BtnPerigo}" Content="🗑  Excluir" Click="BtnExcluirModo_Click" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== CELULAR ===== -->
+            <ScrollViewer x:Name="PgCelular" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                    <TextBlock Text="Celular" Style="{StaticResource Titulo}"/>
+                    <TextBlock Text="Use o celular como controle remoto: modos, volume, mouse, teclado e energia. Só aparelhos pareados conseguem controlar o PC." Style="{StaticResource Sub}" Margin="0,4,0,18"/>
+
+                    <Border Style="{StaticResource Card}">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Left" Background="White" CornerRadius="12" Padding="10" Width="206" Height="206" Margin="0,0,24,0">
+                                <Image x:Name="ImgQr" RenderOptions.BitmapScalingMode="NearestNeighbor"/>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <TextBlock Text="CÓDIGO DE PAREAMENTO" FontSize="11" FontWeight="SemiBold" Foreground="{DynamicResource MutedBrush}"/>
+                                <TextBlock x:Name="TxtCodigo" FontSize="36" FontWeight="Bold" Foreground="{DynamicResource AccentBrush}" Text="000 000"/>
+                                <TextBlock x:Name="TxtValidade" Style="{StaticResource Sub}"/>
+                                <TextBlock x:Name="TxtEndereco" Margin="0,12,0,0"/>
+                                <TextBlock x:Name="TxtServidor" Style="{StaticResource Sub}" Margin="0,3,0,0"/>
+                                <Button x:Name="BtnNovoCodigo" Style="{StaticResource BtnSecundario}" Content="↻  Gerar novo código" HorizontalAlignment="Left" Margin="0,14,0,0" Click="BtnNovoCodigo_Click"/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+
+                    <TextBlock Text="COMO PAREAR" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock TextWrapping="Wrap" Text="1.  Celular e PC precisam estar na mesma rede Wi-Fi/roteador."/>
+                            <TextBlock TextWrapping="Wrap" Margin="0,6,0,0" Text="2.  Abra o app GameModeHub no celular e leia o QR acima (ou digite o código)."/>
+                            <TextBlock TextWrapping="Wrap" Margin="0,6,0,0" Text="3.  Se não achar o PC, clique em “Liberar no firewall” logo abaixo (só uma vez)."/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,8,0,0" Text="O código troca sozinho a cada 10 minutos e depois de cada pareamento, por segurança. O QR desta tela se atualiza sozinho."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="REDE" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtFirewall" Text="Verificando firewall…" FontWeight="SemiBold"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0"
+                                       Text="O Windows vai pedir permissão só nesse momento; o app continua sem administrador. A liberação vale em rede doméstica ou pública, mas só para aparelhos da mesma rede local."/>
+                            <Button x:Name="BtnFirewall" Style="{StaticResource BtnPrimario}" Content="🛡  Liberar no firewall" HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnFirewall_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="APARELHOS PAREADOS" Style="{StaticResource Rotulo}"/>
+                    <StackPanel x:Name="ListaPareados"/>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== PROGRAMAS ===== -->
+            <ScrollViewer x:Name="PgProgramas" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="780" HorizontalAlignment="Left">
+                    <TextBlock Text="Programas" Style="{StaticResource Titulo}"/>
+                    <TextBlock Text="O que fechar quando um modo for ativado (navegador, Discord, launchers pesados…). Ao restaurar, reabrimos exatamente o que foi fechado." Style="{StaticResource Sub}" Margin="0,4,0,6"/>
+                    <TextBlock x:Name="TxtPerfilProgramas" Style="{StaticResource Sub}" Margin="0,0,0,18"/>
+
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel x:Name="ListaApps"/>
+                    </Border>
+
+                    <TextBlock Text="ADICIONAR" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Escolha um programa que está aberto agora:"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <ComboBox x:Name="CmbAbertos" Width="360" Height="38"/>
+                                <Button x:Name="BtnAddApp" Style="{StaticResource BtnPrimario}" Content="＋  Adicionar" Margin="8,0,0,0" Click="BtnAddApp_Click"/>
+                                <Button x:Name="BtnAtualizarAbertos" Style="{StaticResource BtnIcone}" Content="↻" Margin="8,0,0,0" Click="BtnAtualizarAbertos_Click" ToolTip="Atualizar a lista de programas abertos"/>
+                            </StackPanel>
+                            <TextBlock Margin="0,16,0,0" Text="Ou procure o programa no PC (mesmo fechado):"/>
+                            <Button x:Name="BtnProcurarApp" Style="{StaticResource BtnSecundario}" Content="📂  Procurar .exe…" HorizontalAlignment="Left" Margin="0,8,0,0" Click="BtnProcurarApp_Click"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== CONTROLE E ATALHOS ===== -->
+            <ScrollViewer x:Name="PgControles" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="780" HorizontalAlignment="Left">
+                    <TextBlock Text="Controle e atalhos" Style="{StaticResource Titulo}"/>
+                    <TextBlock Text="Ative modos sem sair do jogo: pelo controle do Xbox ou por teclas do teclado." Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+
+                    <TextBlock Text="CONTROLE (XBOX / XINPUT)" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtControleDet" FontWeight="SemiBold" Text="Nenhum controle conectado"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,3,0,12" Text="Funciona com qualquer controle compatível com Xbox, em qualquer porta (1 a 4)."/>
+                            <CheckBox x:Name="ChkGuia" Style="{StaticResource Interruptor}" Click="ChkControle_Click" Content="Segurar o botão Xbox (Guia) por 3,5 s abre o Modo TV"/>
+                            <CheckBox x:Name="ChkVibrar" Style="{StaticResource Interruptor}" Click="ChkControle_Click" Margin="0,12,0,0" Content="Vibrar o controle para confirmar as ações"/>
+                            <CheckBox x:Name="ChkCombos" Style="{StaticResource Interruptor}" Click="ChkControle_Click" Margin="0,12,0,0" Content="Atalhos segurando LB + RB (funcionam dentro do jogo)"/>
+                            <Border x:Name="TabelaCombos" Background="{DynamicResource Surface2Brush}" CornerRadius="12" Padding="14,10" Margin="52,12,0,0">
+                                <Grid>
+                                    <Grid.ColumnDefinitions><ColumnDefinition Width="210"/><ColumnDefinition Width="*"/></Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/><RowDefinition/>
+                                    </Grid.RowDefinitions>
+                                    <TextBlock Grid.Row="0" Text="LB + RB + Start (2 s)" FontWeight="SemiBold" Margin="0,3"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="Ativa o modo escolhido abaixo" Margin="0,3" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Grid.Row="1" Text="LB + RB + Back (1,5 s)" FontWeight="SemiBold" Margin="0,3"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="Restaura o desktop" Margin="0,3" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Grid.Row="2" Text="LB + RB + ◀ (1,5 s)" FontWeight="SemiBold" Margin="0,3"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="Fecha o jogo travado em foco e solta o mouse" Margin="0,3" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Grid.Row="3" Text="LB + RB + ▶" FontWeight="SemiBold" Margin="0,3"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="Troca a saída de áudio A ⇄ B" Margin="0,3" Foreground="{DynamicResource MutedBrush}"/>
+                                    <TextBlock Grid.Row="4" Text="LB + RB + ▲ / ▼" FontWeight="SemiBold" Margin="0,3"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="Volume +5% / −5% (segure para repetir)" Margin="0,3" Foreground="{DynamicResource MutedBrush}"/>
+                                </Grid>
+                            </Border>
+                            <DockPanel Margin="52,14,0,0">
+                                <TextBlock Text="Modo do LB + RB + Start" VerticalAlignment="Center" Width="190"/>
+                                <ComboBox x:Name="CmbModoPadrao" Width="280" Height="36" HorizontalAlignment="Left" SelectionChanged="CmbModoPadrao_SelectionChanged"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,14,0,0" Text="Na janela do GameModeHub e no Modo TV: direcional move, A confirma, B volta."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="ATALHOS DE TECLADO (FUNCIONAM DENTRO DO JOGO)" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Restaurar desktop" Width="190" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdRestaurar" Width="240" v:HotkeyBox.Ativo="True"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Fechar jogo travado" Width="190" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdFecharJogo" Width="240" v:HotkeyBox.Ativo="True" ToolTip="Fecha o programa em primeiro plano e destrava o mouse"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Abrir Modo TV" Width="190" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdAtalhoTv" Width="240" v:HotkeyBox.Ativo="True"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,10,0,0" Text="Clique na caixa e aperte a tecla. Backspace ou Esc apaga. Os atalhos de cada modo ficam no ✎ do modo, na tela Início."/>
+                            <Button x:Name="BtnSalvarAtalhos" Style="{StaticResource BtnPrimario}" Content="✔  Aplicar atalhos" HorizontalAlignment="Left" Margin="0,14,0,0" Click="BtnSalvarAtalhos_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="TODOS OS ATALHOS ATIVOS" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel x:Name="ListaAtalhos"/>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== APARÊNCIA ===== -->
+            <ScrollViewer x:Name="PgAparencia" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                    <TextBlock Text="Aparência" Style="{StaticResource Titulo}"/>
+
+                    <TextBlock Text="TEMA" Style="{StaticResource Rotulo}"/>
+                    <WrapPanel x:Name="PainelTemas"/>
+
+                    <TextBlock Text="COR DE DESTAQUE" Style="{StaticResource Rotulo}"/>
+                    <WrapPanel x:Name="PainelAccent"/>
+
+                    <TextBlock Text="PAPEL DE PAREDE DA JANELA" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <Border DockPanel.Dock="Left" Width="176" Height="99" CornerRadius="10" Background="{DynamicResource Surface2Brush}" Margin="0,0,18,0" ClipToBounds="True">
+                                    <Grid>
+                                        <TextBlock x:Name="TxtSemWallpaper" Text="Sem imagem" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                        <Image x:Name="ImgThumbJanela" Stretch="UniformToFill"/>
+                                    </Grid>
+                                </Border>
+                                <StackPanel VerticalAlignment="Center">
+                                    <StackPanel Orientation="Horizontal">
+                                        <Button x:Name="BtnWallpaper" Style="{StaticResource BtnPrimario}" Content="Escolher imagem…" Click="BtnWallpaper_Click"/>
+                                        <Button x:Name="BtnRemoverWallpaper" Style="{StaticResource BtnSecundario}" Content="Remover" Margin="8,0,0,0" Click="BtnRemoverWallpaper_Click"/>
+                                    </StackPanel>
+                                    <TextBlock Style="{StaticResource Sub}" Margin="0,8,0,0" Text="A imagem é copiada para a pasta do app; pode apagar a original."/>
+                                </StackPanel>
+                            </DockPanel>
+
+                            <DockPanel Margin="0,20,0,0">
+                                <TextBlock Text="Desfoque" Width="90" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtDesfoque" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center"/>
+                                <Slider x:Name="SldDesfoque" Minimum="0" Maximum="100" ValueChanged="SldDesfoque_ValueChanged"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="90,0,0,0" Text="Esquerda: nítido · Direita: bem desfocado"/>
+
+                            <DockPanel Margin="0,14,0,0">
+                                <TextBlock Text="Escurecer" Width="90" VerticalAlignment="Center"/>
+                                <TextBlock x:Name="TxtEscurecer" DockPanel.Dock="Right" Width="48" TextAlignment="Right" VerticalAlignment="Center"/>
+                                <Slider x:Name="SldEscurecer" Minimum="0" Maximum="100" ValueChanged="SldEscurecer_ValueChanged"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="90,0,0,0" Text="Deixa o texto mais fácil de ler por cima da imagem."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="PAPEL DE PAREDE DO MODO TV" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <DockPanel>
+                            <Border DockPanel.Dock="Left" Width="176" Height="99" CornerRadius="10" Background="{DynamicResource Surface2Brush}" Margin="0,0,18,0" ClipToBounds="True">
+                                <Grid>
+                                    <TextBlock x:Name="TxtTvMesmo" Text="Usa o mesmo da janela" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                                    <Image x:Name="ImgThumbTv" Stretch="UniformToFill"/>
+                                </Grid>
+                            </Border>
+                            <StackPanel VerticalAlignment="Center">
+                                <StackPanel Orientation="Horizontal">
+                                    <Button x:Name="BtnWallpaperTv" Style="{StaticResource BtnSecundario}" Content="Escolher outra…" Click="BtnWallpaperTv_Click"/>
+                                    <Button x:Name="BtnWallpaperTvMesmo" Style="{StaticResource BtnSecundario}" Content="Usar o mesmo da janela" Margin="8,0,0,0" Click="BtnWallpaperTvMesmo_Click"/>
+                                </StackPanel>
+                                <TextBlock Style="{StaticResource Sub}" Margin="0,8,0,0" Text="Imagem de fundo da tela cheia que aparece na TV."/>
+                            </StackPanel>
+                        </DockPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- ===== GERAL ===== -->
+            <ScrollViewer x:Name="PgGeral" Visibility="Collapsed" VerticalScrollBarVisibility="Auto" Padding="34,28">
+                <StackPanel MaxWidth="760" HorizontalAlignment="Left">
+                    <TextBlock Text="Geral" Style="{StaticResource Titulo}"/>
+
+                    <TextBlock Text="PERFIS" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Text="Cada perfil tem seus próprios modos e lista de programas (ex.: “Sala”, “Quarto”, “Trabalho”). Troque pelo seletor no topo da barra lateral."/>
+                            <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                <TextBlock Text="Nome do perfil ativo" Width="170" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdNomePerfil" MaxLength="30" Width="240"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="Renomear" Margin="8,0,0,0" Click="BtnRenomearPerfil_Click" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button Style="{StaticResource BtnSecundario}" Content="⧉  Novo perfil (cópia deste)" Click="BtnNovoPerfil_Click" Margin="0,0,8,0"/>
+                                <Button x:Name="BtnExcluirPerfil" Style="{StaticResource BtnPerigo}" Content="🗑  Excluir este perfil" Click="BtnExcluirPerfil_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="INICIALIZAÇÃO E AVISOS" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkWindows" Style="{StaticResource Interruptor}" Content="Iniciar com o Windows" Click="ChkWindows_Click"/>
+                            <CheckBox x:Name="ChkMinimizado" Style="{StaticResource Interruptor}" Content="Ao iniciar com o Windows, ficar escondido na bandeja" Margin="0,12,0,0" Click="ChkMinimizado_Click"/>
+                            <CheckBox x:Name="ChkAvisos" Style="{StaticResource Interruptor}" Content="Mostrar aviso na tela ao trocar de modo (não rouba o foco do jogo)" Margin="0,12,0,0" Click="ChkAvisos_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="SAÍDAS DE ÁUDIO" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Text="Saída A (ex.: fones / headset)"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,14">
+                                <ComboBox x:Name="CmbSaidaA" Width="380" Height="38" SelectionChanged="CmbSaida_SelectionChanged" Tag="A"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="▶  Testar" Margin="8,0,0,0" Click="BtnTestarSaida_Click" Tag="A" ToolTip="Toca um som curto nesta saída para você saber qual é"/>
+                            </StackPanel>
+                            <TextBlock Text="Saída B (ex.: TV / caixas do monitor)"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                <ComboBox x:Name="CmbSaidaB" Width="380" Height="38" SelectionChanged="CmbSaida_SelectionChanged" Tag="B"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="▶  Testar" Margin="8,0,0,0" Click="BtnTestarSaida_Click" Tag="B" ToolTip="Toca um som curto nesta saída para você saber qual é"/>
+                            </StackPanel>
+                            <DockPanel Margin="0,12,0,0">
+                                <Button DockPanel.Dock="Right" Style="{StaticResource BtnTexto}" Content="↻ Atualizar lista" Click="BtnAtualizarSaidas_Click"/>
+                                <TextBlock x:Name="TxtSaidasInfo" Style="{StaticResource Sub}" VerticalAlignment="Center"/>
+                            </DockPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="AO RESTAURAR O DESKTOP" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <DockPanel>
+                                <TextBlock Text="Telas" Width="170" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbRestTelas" Width="360" Height="36" HorizontalAlignment="Left" SelectionChanged="CmbRestaurar_SelectionChanged"/>
+                            </DockPanel>
+                            <DockPanel Margin="0,10,0,0">
+                                <TextBlock Text="Áudio" Width="170" VerticalAlignment="Center"/>
+                                <ComboBox x:Name="CmbRestAudio" Width="360" Height="36" HorizontalAlignment="Left" SelectionChanged="CmbRestaurar_SelectionChanged"/>
+                            </DockPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,10,0,0" Text="O plano de energia e o HDR voltam sozinhos para como estavam antes do modo."/>
+                            <CheckBox x:Name="ChkNotificacoes" Style="{StaticResource Interruptor}" Margin="0,14,0,0" Click="ChkNotificacoes_Click"
+                                      Content="Silenciar as notificações do Windows enquanto um modo estiver ativo (beta)"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="BACKUP" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Text="Salve tudo (perfis, modos, telas, atalhos, aparência) num arquivo para levar a outro PC ou guardar antes de formatar. Os celulares pareados não vão no backup, por segurança."/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button Style="{StaticResource BtnSecundario}" Content="⬇  Exportar backup…" Click="BtnExportar_Click" Margin="0,0,8,0"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="⬆  Importar backup…" Click="BtnImportar_Click"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="ATUALIZAÇÕES" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtVersao" FontWeight="SemiBold"/>
+                            <TextBlock x:Name="TxtUpdate" Style="{StaticResource Sub}" Margin="0,3,0,0"/>
+                            <CheckBox x:Name="ChkUpdates" Style="{StaticResource Interruptor}" Margin="0,12,0,0" Click="ChkUpdates_Click" Content="Verificar novas versões automaticamente (1x por dia)"/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button x:Name="BtnVerificarUpdate" Style="{StaticResource BtnSecundario}" Content="↻  Verificar agora" Click="BtnVerificarUpdate_Click" Margin="0,0,8,0"/>
+                                <Button x:Name="BtnBaixarUpdate" Style="{StaticResource BtnPrimario}" Content="⬇  Baixar nova versão" Click="BtnBaixarUpdate_Click" Visibility="Collapsed"/>
+                            </WrapPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="AVANÇADO" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Porta do servidor" Width="170" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdPorta" Width="110" MaxLength="5"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="Aplicar" Margin="8,0,0,0" Click="BtnAplicarPorta_Click" VerticalAlignment="Center"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="170,6,0,0" Text="Só mude se outro programa usar a 5050. Depois, pareie o celular de novo e libere o firewall."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="SISTEMA" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtAdmin"/>
+                            <TextBlock x:Name="TxtDados" Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+                            <TextBlock x:Name="TxtPerf" Style="{StaticResource Sub}" Margin="0,4,0,0"/>
+                            <WrapPanel Margin="0,12,0,0">
+                                <Button x:Name="BtnAdmin" Style="{StaticResource BtnSecundario}" Content="Reabrir como administrador" Click="BtnAdmin_Click" Margin="0,0,8,8"
+                                        ToolTip="Só é necessário se algum jogo/programa rodando como administrador não fechar"/>
+                                <Button x:Name="BtnLog" Style="{StaticResource BtnSecundario}" Content="Ver log" Click="BtnLog_Click" Margin="0,0,8,8"/>
+                                <Button x:Name="BtnPasta" Style="{StaticResource BtnSecundario}" Content="Abrir pasta de dados" Click="BtnPasta_Click" Margin="0,0,8,8"/>
+                            </WrapPanel>
+                            <Button x:Name="BtnSair" Style="{StaticResource BtnPerigo}" Content="⏻  Fechar o GameModeHub" HorizontalAlignment="Left" Margin="0,4,0,0" Click="BtnSair_Click"
+                                    ToolTip="Fecha de vez (o X da janela só esconde na bandeja)"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+        </Grid>
+    </Grid>
+</Window>
