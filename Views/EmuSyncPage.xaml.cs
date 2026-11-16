@@ -747,8 +747,6 @@ namespace GameModeHub.Views
             EdBackupsPadrao.Text = _local.MaxBackups.ToString();
 
             var c = ConfigService.Atual;
-            ChkAoAtivar.IsChecked = c.EmuSyncAoAtivarModo;
-            ChkAoRestaurar.IsChecked = c.EmuSyncAoRestaurar;
             ChkCombo.IsChecked = c.EmuSyncComboControle;
             _ = AtualizarVarredura();
         }
@@ -791,8 +789,6 @@ namespace GameModeHub.Views
         private void ChkIntegracao_Click(object sender, RoutedEventArgs e)
         {
             var c = ConfigService.Atual;
-            c.EmuSyncAoAtivarModo = ChkAoAtivar.IsChecked == true;
-            c.EmuSyncAoRestaurar = ChkAoRestaurar.IsChecked == true;
             c.EmuSyncComboControle = ChkCombo.IsChecked == true;
             ConfigService.Salvar(true);
         }

@@ -223,30 +223,6 @@ namespace GameModeHub.Services
             catch (Exception ex) { Log.Error("EmuSync: sincronizar tudo", ex); Views.ToastWindow.Mostrar("Não consegui sincronizar", ex.Message, "⚠"); return null; }
         }
 
-        /// <summary>
-        /// Usado na troca de modo (ModeService): sincroniza tudo sem avisos próprios e devolve o texto do passo.
-        /// Retorna null quando o addon/opção está desligado.
-        /// </summary>
-        public static string SincronizarParaModo(bool aoAtivar)
-        {
-            var c = ConfigService.Atual;
-            if (!c.AddonEmuSync || (aoAtivar ? !c.EmuSyncAoAtivarModo : !c.EmuSyncAoRestaurar)) return null;
-            // Task.Run: roda fora da thread da janela (evita travar a interface esperando o HTTP)
-            var t = Task.Run(async () =>
-            {
-                if (!await EmuSyncClient.Online()) return "Saves: o EmuSync não respondeu";
-                try
-                {
-                    var r = await EmuSyncClient.SincronizarTudo();
-                    SyncTerminou?.Invoke();
-                    return "Saves: " + r.Resumo.ToLowerInvariant().Replace("tudo em dia", "em dia");
-                }
-                catch (EmuSyncException ex) { return "Saves: " + ex.Message; }
-            });
-            try { return t.Wait(TimeSpan.FromSeconds(120)) ? t.Result : "Saves: ainda sincronizando em segundo plano"; }
-            catch (Exception ex) { Log.Error("EmuSync: sync do modo", ex); return "Saves: erro ao sincronizar"; }
-        }
-
         /// <summary>Avisa a tela do EmuSync para recarregar depois de um sync feito por fora (controle, celular, modo).</summary>
         public static event Action SyncTerminou;
         public static void NotificarSync() => SyncTerminou?.Invoke();

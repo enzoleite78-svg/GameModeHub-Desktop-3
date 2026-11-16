@@ -222,11 +222,7 @@
                     <TextBlock Text="JUNTO COM O GAMEMODEHUB" Style="{StaticResource Rotulo}"/>
                     <Border Style="{StaticResource Card}">
                         <StackPanel>
-                            <CheckBox x:Name="ChkAoAtivar" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click"
-                                      Content="Ao ativar um modo, sincronizar antes (pega o save mais novo da nuvem)"/>
-                            <CheckBox x:Name="ChkAoRestaurar" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click" Margin="0,12,0,0"
-                                      Content="Ao restaurar o desktop, sincronizar (manda o save de quem acabou de jogar)"/>
-                            <CheckBox x:Name="ChkCombo" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click" Margin="0,12,0,0"
+                            <CheckBox x:Name="ChkCombo" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click"
                                       Content="Segurar LB + RB + Y (1,5 s) no controle sincroniza tudo"/>
                             <TextBlock Style="{StaticResource Sub}" Margin="52,8,0,0" TextWrapping="Wrap"
                                        Text="Pelo celular (app GameModeHub) e pela bandeja também dá para sincronizar tudo. Feche o jogo antes de sincronizar."/>

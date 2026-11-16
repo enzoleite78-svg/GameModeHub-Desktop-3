@@ -24,8 +24,6 @@ Os dois continuam sendo **programas separados**. O EmuSync oficial faz a sincron
   - procura de jogos (Ludusavi).
 
 ### Junto com o resto do GameModeHub
-- **Ao ativar um modo,** sincroniza antes, para pegar o save mais novo. Pode desligar.
-- **Ao restaurar o desktop,** sincroniza, para mandar o save de quem acabou de jogar. Pode desligar.
 - **Controle:** segurar **LB + RB + Y** por 1,5 s sincroniza tudo.
 - **Bandeja:** item "Sincronizar saves (EmuSync)".
 - **Celular**, rotas novas do servidor:
