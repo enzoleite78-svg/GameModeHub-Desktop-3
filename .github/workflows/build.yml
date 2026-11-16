@@ -1,0 +1,47 @@
+name: Build GameModeHub Desktop
+
+on:
+  push:
+    branches: [ main, master ]
+    tags: [ 'v*' ]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+          dotnet-quality: 'ga'
+
+      - name: Publicar (1 arquivo, sem precisar instalar .NET)
+        run: dotnet publish GameModeHub.csproj -c Release -o publish
+
+      - name: Montar ZIP portátil
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path dist/GameModeHub | Out-Null
+          Copy-Item publish/GameModeHub.exe dist/GameModeHub/
+          New-Item -ItemType File -Force -Path dist/GameModeHub/portable.flag | Out-Null
+          Copy-Item README.md dist/GameModeHub/LEIA-ME.md
+          Copy-Item MUDANCAS-4.1.md dist/GameModeHub/MUDANCAS-4.1.md
+          Copy-Item MUDANCAS-4.2.md dist/GameModeHub/MUDANCAS-4.2.md
+          Compress-Archive -Path dist/GameModeHub -DestinationPath GameModeHub-Desktop-portable.zip -Force
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: GameModeHub-Desktop-portable
+          path: GameModeHub-Desktop-portable.zip
+
+      - name: Criar release (quando a tag começa com v)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: GameModeHub-Desktop-portable.zip

@@ -1,0 +1,54 @@
+<Window x:Class="GameModeHub.Views.TvWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="GameModeHub · Modo TV" WindowStyle="None" WindowState="Maximized" ResizeMode="NoResize"
+        Background="{DynamicResource BgBrush}" Topmost="True" FontFamily="{StaticResource UiFont}" Foreground="{DynamicResource TextBrush}">
+    <Grid>
+        <Image x:Name="Fundo" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/>
+        <Rectangle x:Name="Escuro" Fill="Black" Opacity="0.5"/>
+
+        <Grid Margin="80,60">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <DockPanel>
+                <StackPanel DockPanel.Dock="Right" HorizontalAlignment="Right">
+                    <TextBlock x:Name="TxtHora" FontSize="34" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                    <TextBlock x:Name="TxtInfo" FontSize="16" Foreground="{DynamicResource MutedBrush}" HorizontalAlignment="Right" Margin="0,2,0,0"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal">
+                    <Border Width="58" Height="58" CornerRadius="16" Background="{DynamicResource AccentBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="🎮" FontSize="28" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Border>
+                    <StackPanel Margin="18,0,0,0" VerticalAlignment="Center">
+                        <TextBlock Text="GameModeHub" FontSize="38" FontWeight="Bold"/>
+                        <TextBlock x:Name="TxtEstado" FontSize="18" Foreground="{DynamicResource MutedBrush}" Margin="0,2,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </DockPanel>
+
+            <Grid Grid.Row="1">
+                <WrapPanel x:Name="PainelModos" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                <Border x:Name="PainelTrabalhando" Visibility="Collapsed" Background="{DynamicResource ToastBrush}" CornerRadius="20" Padding="34,24"
+                        HorizontalAlignment="Center" VerticalAlignment="Center" BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                    <StackPanel Orientation="Horizontal">
+                        <Control Style="{StaticResource Spinner}" Width="34" Height="34"/>
+                        <TextBlock x:Name="TxtTrabalhando" FontSize="24" FontWeight="SemiBold" Margin="18,0,0,0" VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+
+            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center">
+                <Button x:Name="BtnAudio" Style="{StaticResource BtnSecundario}" FontSize="20" Padding="28,16" Margin="0,0,16,0" Content="🔊  Trocar áudio" Click="BtnAudio_Click"/>
+                <Button x:Name="BtnRestaurar" Style="{StaticResource BtnSecundario}" FontSize="20" Padding="28,16" Margin="0,0,16,0" Content="🖥  Restaurar desktop" Click="BtnRestaurar_Click"/>
+                <Button x:Name="BtnFechar" Style="{StaticResource BtnSecundario}" FontSize="20" Padding="28,16" Content="✕  Fechar" Click="BtnFechar_Click"/>
+            </StackPanel>
+            <TextBlock Grid.Row="3" HorizontalAlignment="Center" Margin="0,18,0,0" FontSize="14" Foreground="{DynamicResource MutedBrush}"
+                       Text="Direcionais: mover   ·   A: escolher   ·   B: fechar   ·   LB+RB+▲/▼: volume   ·   LB+RB+▶: trocar áudio"/>
+        </Grid>
+    </Grid>
+</Window>
