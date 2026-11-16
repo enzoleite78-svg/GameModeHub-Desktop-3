@@ -33,6 +33,7 @@ jobs:
           Copy-Item README.md dist/GameModeHub/LEIA-ME.md
           Copy-Item MUDANCAS-4.1.md dist/GameModeHub/MUDANCAS-4.1.md
           Copy-Item MUDANCAS-4.2.md dist/GameModeHub/MUDANCAS-4.2.md
+          Copy-Item MUDANCAS-4.3.md dist/GameModeHub/MUDANCAS-4.3.md
           Compress-Archive -Path dist/GameModeHub -DestinationPath GameModeHub-Desktop-portable.zip -Force
 
       - uses: actions/upload-artifact@v4
