@@ -101,9 +101,143 @@ namespace GameModeHub
             // CORREÇÃO 4.1: se o controle já estava conectado antes da janela abrir, ela mostrava "Nenhum controle"
             AtualizarTextoControle();
 
+            PgEmuSync.IrParaAddons += () => IrPara("geral");
+            AtualizarNavEmuSync();
+
             CarregarPerfis();
             CarregarAparencia();
             _carregando = false;
+        }
+
+        // ================= ADDONS (NOVO 4.3) =================
+        private System.Threading.CancellationTokenSource _downloadEmuSync;
+
+        private void AtualizarNavEmuSync()
+        {
+            NavEmuSync.Visibility = ConfigService.Atual.AddonEmuSync ? Visibility.Visible : Visibility.Collapsed;
+            if (!ConfigService.Atual.AddonEmuSync && _pagina == "emusync") IrPara("geral");
+        }
+
+        private async Task AtualizarAddons()
+        {
+            if (_downloadEmuSync != null) return;     // durante o download o texto mostra a %
+            var ativo = ConfigService.Atual.AddonEmuSync;
+            ChipEmuSyncAtivo.Visibility = ativo ? Visibility.Visible : Visibility.Collapsed;
+            TxtAddonEmuSync.Text = "Verificando…";
+            var d = await EmuSyncAddon.Detectar();
+            if (_downloadEmuSync != null) return;
+            bool instalado = d.ApiOnline || d.ServicoInstalado || d.AppInstalado;
+            TxtAddonEmuSync.Text = d.Resumo + (ativo ? " · aba na barra lateral" : instalado ? " · clique em “Já tenho instalado” para criar a aba" : "");
+            BtnEmuSyncBaixar.Visibility = instalado ? Visibility.Collapsed : Visibility.Visible;
+            BtnEmuSyncProcurar.Visibility = ativo ? Visibility.Collapsed : Visibility.Visible;
+            BtnEmuSyncProcurar.Style = (Style)FindResource(instalado ? "BtnPrimario" : "BtnSecundario");
+            BtnEmuSyncAbrir.Visibility = ativo ? Visibility.Visible : Visibility.Collapsed;
+            BtnEmuSyncDesativar.Visibility = ativo ? Visibility.Visible : Visibility.Collapsed;
+            BtnEmuSyncCancelar.Visibility = Visibility.Collapsed;
+        }
+
+        private void AtivarAddonEmuSync()
+        {
+            ConfigService.Atual.AddonEmuSync = true;
+            ConfigService.Salvar(true);
+            AtualizarNavEmuSync();
+            App.AddonsMudaram();
+            ToastWindow.Mostrar("Addon EmuSync ativado", "A aba “EmuSync” apareceu na barra lateral.", "🔄");
+            IrPara("emusync");
+        }
+
+        private async void BtnEmuSyncProcurar_Click(object sender, RoutedEventArgs e)
+        {
+            BtnEmuSyncProcurar.IsEnabled = false;
+            TxtAddonEmuSync.Text = "Procurando o EmuSync neste PC…";
+            try
+            {
+                var d = await EmuSyncAddon.Detectar();
+                if (d.ApiOnline) { AtivarAddonEmuSync(); return; }
+                if (d.ServicoInstalado)
+                {
+                    if (MessageBox.Show(this, "Achei o EmuSync, mas o serviço de sincronização dele está parado.\n\nLigar agora? O Windows vai pedir permissão de administrador.", "GameModeHub",
+                            MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+                    {
+                        TxtAddonEmuSync.Text = "Ligando o serviço do EmuSync…";
+                        if (await EmuSyncAddon.IniciarServico()) { AtivarAddonEmuSync(); return; }
+                        ToastWindow.Mostrar("O serviço do EmuSync não ligou", "Abra o EmuSync original uma vez ou reinstale pelo botão “Baixar e instalar”.", "⚠");
+                    }
+                }
+                else if (d.AppInstalado)
+                    ToastWindow.Mostrar("EmuSync incompleto", "O programa está instalado, mas sem o serviço de sincronização. Reinstale pelo botão “Baixar e instalar”.", "⚠");
+                else
+                    ToastWindow.Mostrar("Não achei o EmuSync", "Use “Baixar e instalar” para instalar o oficial.", "🔍");
+            }
+            finally
+            {
+                BtnEmuSyncProcurar.IsEnabled = true;
+                await AtualizarAddons();
+                if (!ConfigService.Atual.AddonEmuSync) BtnEmuSyncBaixar.Visibility = Visibility.Visible;
+            }
+        }
+
+        private async void BtnEmuSyncBaixar_Click(object sender, RoutedEventArgs e)
+        {
+            if (_downloadEmuSync != null) return;
+            EmuSyncAddon.Instalador inst;
+            try
+            {
+                TxtAddonEmuSync.Text = "Consultando a última versão no GitHub do EmuSync…";
+                inst = await EmuSyncAddon.UltimaVersao();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn("EmuSync: última versão: " + ex.Message);
+                ToastWindow.Mostrar("Sem conexão com o GitHub", "Tente de novo, ou baixe em github.com/emu-sync/EmuSync.", "⚠");
+                await AtualizarAddons();
+                return;
+            }
+
+            var msg = $"Baixar o EmuSync {inst.Versao} oficial?\n\nArquivo: {inst.Nome} ({inst.Tamanho / 1048576} MB)\nOrigem: github.com/{EmuSyncAddon.RepoOficial}\n\nDepois do download, o instalador abre e o Windows pede permissão de administrador. O EmuSync é um programa separado, de outro autor.";
+            if (MessageBox.Show(this, msg, "GameModeHub", MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) { await AtualizarAddons(); return; }
+
+            _downloadEmuSync = new System.Threading.CancellationTokenSource();
+            BtnEmuSyncBaixar.IsEnabled = BtnEmuSyncProcurar.IsEnabled = false;
+            BtnEmuSyncCancelar.Visibility = Visibility.Visible;
+            var progresso = new Progress<double>(p => TxtAddonEmuSync.Text = $"Baixando o EmuSync {inst.Versao}… {p:0}%");
+            try
+            {
+                var arquivo = await EmuSyncAddon.Baixar(inst, progresso, _downloadEmuSync.Token);
+                BtnEmuSyncCancelar.Visibility = Visibility.Collapsed;
+                TxtAddonEmuSync.Text = "Instalando… termine a instalação na janela do EmuSync.";
+                if (!EmuSyncAddon.AbrirInstalador(arquivo))
+                {
+                    ToastWindow.Mostrar("O instalador não abriu", "Clique em “Sim” no aviso do Windows e tente de novo.", "⚠");
+                    return;
+                }
+                TxtAddonEmuSync.Text = "Esperando a instalação terminar… (o GameModeHub detecta sozinho)";
+                if (await EmuSyncAddon.EsperarOnline(TimeSpan.FromMinutes(10), _downloadEmuSync.Token)) { _downloadEmuSync = null; AtivarAddonEmuSync(); }
+                else ToastWindow.Mostrar("Ainda não achei o EmuSync", "Quando a instalação terminar, clique em “Já tenho instalado”.", "ℹ");
+            }
+            catch (OperationCanceledException) { ToastWindow.Mostrar("Download cancelado", null, "ℹ"); }
+            catch (Exception ex) { Log.Error("EmuSync: baixar", ex); ToastWindow.Mostrar("O download falhou", ex.Message, "⚠"); }
+            finally
+            {
+                _downloadEmuSync = null;
+                BtnEmuSyncBaixar.IsEnabled = BtnEmuSyncProcurar.IsEnabled = true;
+                await AtualizarAddons();
+            }
+        }
+
+        private void BtnEmuSyncCancelar_Click(object sender, RoutedEventArgs e) => _downloadEmuSync?.Cancel();
+
+        private void BtnEmuSyncAbrir_Click(object sender, RoutedEventArgs e) => IrPara("emusync");
+
+        private async void BtnEmuSyncDesativar_Click(object sender, RoutedEventArgs e)
+        {
+            if (MessageBox.Show(this, "Tirar a aba EmuSync da barra lateral?\n\nO EmuSync continua instalado e sincronizando sozinho; só o GameModeHub para de mostrar e comandar. Dá para ativar de novo aqui.", "GameModeHub",
+                    MessageBoxButton.YesNo, MessageBoxImage.Question) != MessageBoxResult.Yes) return;
+            ConfigService.Atual.AddonEmuSync = false;
+            ConfigService.Salvar(true);
+            AtualizarNavEmuSync();
+            App.AddonsMudaram();
+            await AtualizarAddons();
         }
 
         // ================= JANELA =================
@@ -172,6 +306,8 @@ namespace GameModeHub
             PgControles.Visibility = nome == "controles" ? Visibility.Visible : Visibility.Collapsed;
             PgAparencia.Visibility = nome == "aparencia" ? Visibility.Visible : Visibility.Collapsed;
             PgGeral.Visibility = nome == "geral" ? Visibility.Visible : Visibility.Collapsed;
+            PgEmuSync.Visibility = nome == "emusync" ? Visibility.Visible : Visibility.Collapsed;
+            if (nome == "emusync") PgEmuSync.Mostrar(); else PgEmuSync.Esconder();
 
             _perfTimer.Stop(); _qrTimer.Stop();
             switch (nome)
@@ -187,7 +323,7 @@ namespace GameModeHub
 
         private void IrPara(string nome)
         {
-            var rb = nome switch { "celular" => NavCelular, "programas" => NavProgramas, "controles" => NavControles, "aparencia" => NavAparencia, "geral" => NavGeral, _ => NavInicio };
+            var rb = nome switch { "celular" => NavCelular, "programas" => NavProgramas, "emusync" => NavEmuSync, "controles" => NavControles, "aparencia" => NavAparencia, "geral" => NavGeral, _ => NavInicio };
             if (rb.IsChecked == true) MostrarPagina(nome); else rb.IsChecked = true;
         }
 
@@ -210,6 +346,7 @@ namespace GameModeHub
 
         private void AoMudarPerfil()
         {
+            AtualizarNavEmuSync();     // importar backup pode ligar/desligar o addon
             CarregarPerfis();
             ToastWindow.Mostrar("Perfil: " + ConfigService.Perfil.Nome, $"{ConfigService.Perfil.Modos.Count} modo(s)", "👤");
             MostrarPagina(_pagina == "modo" ? "inicio" : _pagina);
@@ -1027,6 +1164,8 @@ namespace GameModeHub
             ChkVibrar.IsChecked = c.VibrarControle;
             ChkCombos.IsChecked = c.CombosControle;
             TabelaCombos.Opacity = c.CombosControle ? 1 : 0.45;
+            var comboSaves = c.AddonEmuSync && c.EmuSyncComboControle ? Visibility.Visible : Visibility.Collapsed;
+            LinhaComboSaves1.Visibility = LinhaComboSaves2.Visibility = comboSaves;
             CmbModoPadrao.IsEnabled = c.CombosControle;
             var perfil = ConfigService.Perfil;
             var itens = new List<Opcao> { new Opcao("", "Primeiro modo da lista") };
@@ -1281,6 +1420,7 @@ namespace GameModeHub
         // ================= GERAL =================
         private void CarregarGeral()
         {
+            _ = AtualizarAddons();
             _carregando = true;
             var c = ConfigService.Atual;
             var perfil = ConfigService.Perfil;

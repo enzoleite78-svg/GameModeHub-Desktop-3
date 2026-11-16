@@ -1,0 +1,249 @@
+﻿<UserControl x:Class="GameModeHub.Views.EmuSyncPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+    <!-- NOVO 4.3: aba do addon EmuSync. Tudo aqui conversa com o serviço do EmuSync oficial (localhost:5353). -->
+    <ScrollViewer x:Name="Rolagem" VerticalScrollBarVisibility="Auto" Padding="34,28">
+        <StackPanel MaxWidth="1000" HorizontalAlignment="Left">
+
+            <!-- cabeçalho -->
+            <DockPanel Margin="0,0,0,18">
+                <StackPanel DockPanel.Dock="Right" Orientation="Horizontal" VerticalAlignment="Top">
+                    <Button x:Name="BtnAtualizar" Style="{StaticResource BtnSecundario}" Content="↻  Atualizar" Click="BtnAtualizar_Click" ToolTip="Recarrega a lista (F5)"/>
+                    <Button x:Name="BtnAbrirOriginal" Style="{StaticResource BtnSecundario}" Content="↗  EmuSync original" Margin="8,0,0,0" Click="BtnAbrirOriginal_Click"
+                            ToolTip="Abre a janela do próprio EmuSync"/>
+                </StackPanel>
+                <StackPanel>
+                    <TextBlock Text="EmuSync" Style="{StaticResource Titulo}"/>
+                    <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0"
+                               Text="Saves dos seus emuladores e jogos sincronizados entre PC, Steam Deck e celular pela nuvem."/>
+                </StackPanel>
+            </DockPanel>
+
+            <!-- EmuSync parado -->
+            <Border x:Name="CardOffline" Style="{StaticResource Card}" BorderBrush="{DynamicResource DangerBrush}" Margin="0,0,0,16" Visibility="Collapsed">
+                <StackPanel>
+                    <TextBlock Text="⚠  O EmuSync não está respondendo" FontSize="16" FontWeight="SemiBold"/>
+                    <TextBlock x:Name="TxtOffline" Style="{StaticResource Sub}" Margin="0,4,0,0" TextWrapping="Wrap"
+                               Text="O serviço de sincronização do EmuSync (EmuSyncAgent) está parado ou não foi instalado."/>
+                    <WrapPanel Margin="0,12,0,0">
+                        <Button x:Name="BtnLigarServico" Style="{StaticResource BtnPrimario}" Content="▶  Ligar o serviço" Click="BtnLigarServico_Click" Margin="0,0,8,0"
+                                ToolTip="O Windows vai pedir permissão de administrador"/>
+                        <Button Style="{StaticResource BtnSecundario}" Content="Tentar de novo" Click="BtnAtualizar_Click" Margin="0,0,8,0"/>
+                        <Button Style="{StaticResource BtnTexto}" Content="Geral → Addons" Click="BtnIrAddons_Click"/>
+                    </WrapPanel>
+                </StackPanel>
+            </Border>
+
+            <StackPanel x:Name="Conteudo">
+                <!-- sem nuvem -->
+                <Border x:Name="CardSemNuvem" Style="{StaticResource Card}" BorderBrush="{DynamicResource AccentBrush}" Margin="0,0,0,16" Visibility="Collapsed">
+                    <DockPanel>
+                        <Button DockPanel.Dock="Right" Style="{StaticResource BtnPrimario}" Content="☁  Conectar uma nuvem" Click="BtnIrConfigurar_Click" VerticalAlignment="Center"/>
+                        <StackPanel Margin="0,0,12,0">
+                            <TextBlock Text="Falta conectar a nuvem" FontSize="16" FontWeight="SemiBold"/>
+                            <TextBlock Style="{StaticResource Sub}" TextWrapping="Wrap"
+                                       Text="Escolha onde os saves ficam guardados (Google Drive, Dropbox, OneDrive ou uma pasta da rede). Use a mesma nos outros aparelhos."/>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- estado -->
+                <Border Style="{StaticResource Card}" Margin="0,0,0,18">
+                    <DockPanel>
+                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <Button x:Name="BtnSyncTudo" Style="{StaticResource BtnPrimario}" Content="🔄  Sincronizar tudo" Click="BtnSyncTudo_Click" Margin="0,0,8,0"
+                                    ToolTip="Envia ou baixa todos os jogos que estão diferentes da nuvem (o save mais novo vence)"/>
+                            <Button x:Name="BtnNovoJogo" Style="{StaticResource BtnSecundario}" Content="＋  Adicionar jogo" Click="BtnNovoJogo_Click"/>
+                        </WrapPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <Grid Width="14" Height="14" VerticalAlignment="Center" Margin="0,0,14,0">
+                                <Ellipse x:Name="HaloNuvem" Fill="{DynamicResource MutedBrush}" Opacity="0.25" Width="14" Height="14"/>
+                                <Ellipse x:Name="PontoNuvem" Fill="{DynamicResource MutedBrush}" Width="8" Height="8"/>
+                            </Grid>
+                            <StackPanel>
+                                <TextBlock x:Name="TxtNuvem" Text="Conectando ao EmuSync…" FontSize="17" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="TxtProximo" Style="{StaticResource Sub}" Margin="0,2,0,0"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </DockPanel>
+                </Border>
+
+                <!-- trabalhando -->
+                <Border x:Name="BannerTrabalhando" Style="{StaticResource Card}" Margin="0,0,0,16" Visibility="Collapsed" BorderBrush="{DynamicResource AccentBrush}" Padding="18,14">
+                    <StackPanel Orientation="Horizontal">
+                        <Control Style="{StaticResource Spinner}"/>
+                        <TextBlock x:Name="TxtTrabalhando" Margin="12,0,0,0" VerticalAlignment="Center" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Border>
+
+                <!-- abas -->
+                <WrapPanel x:Name="Abas" Margin="0,0,0,14">
+                    <RadioButton x:Name="AbaJogos" Style="{StaticResource Segmento}" GroupName="esaba" Content="🎮  Jogos" Tag="jogos" IsChecked="True" Checked="Aba_Click"/>
+                    <RadioButton x:Name="AbaAparelhos" Style="{StaticResource Segmento}" GroupName="esaba" Content="💻  Aparelhos" Tag="aparelhos" Checked="Aba_Click"/>
+                    <RadioButton x:Name="AbaHistorico" Style="{StaticResource Segmento}" GroupName="esaba" Content="🕘  Histórico" Tag="historico" Checked="Aba_Click"/>
+                    <RadioButton x:Name="AbaConfigurar" Style="{StaticResource Segmento}" GroupName="esaba" Content="⚙  Configurar" Tag="configurar" Checked="Aba_Click"/>
+                </WrapPanel>
+
+                <!-- ===== JOGOS ===== -->
+                <StackPanel x:Name="PainelJogos">
+                    <DockPanel Margin="0,0,0,10">
+                        <WrapPanel DockPanel.Dock="Right" VerticalAlignment="Center">
+                            <RadioButton x:Name="FiltroTodos" Style="{StaticResource Segmento}" GroupName="esfiltro" Content="Todos" IsChecked="True" Checked="Filtro_Click"/>
+                            <RadioButton x:Name="FiltroPendentes" Style="{StaticResource Segmento}" GroupName="esfiltro" Content="Precisam de sync" Checked="Filtro_Click"/>
+                            <RadioButton x:Name="FiltroNestePc" Style="{StaticResource Segmento}" GroupName="esfiltro" Content="Com pasta neste PC" Checked="Filtro_Click"/>
+                        </WrapPanel>
+                        <TextBox x:Name="EdBusca" Tag="🔍  Procurar jogo…" Margin="0,0,12,0" TextChanged="EdBusca_TextChanged"/>
+                    </DockPanel>
+                    <TextBlock x:Name="TxtContagem" Style="{StaticResource Sub}" Margin="2,0,0,10"/>
+                    <StackPanel x:Name="ListaJogos"/>
+                </StackPanel>
+
+                <!-- ===== EDITOR DE JOGO ===== -->
+                <StackPanel x:Name="PainelEditor" Visibility="Collapsed">
+                    <Button Style="{StaticResource BtnSecundario}" Content="←  Voltar" HorizontalAlignment="Left" Click="BtnVoltarLista_Click" ToolTip="Voltar sem salvar (Esc)"/>
+                    <TextBlock x:Name="TxtTituloEditor" Text="Adicionar jogo" FontSize="22" FontWeight="SemiBold" Margin="0,16,0,0"/>
+
+                    <StackPanel x:Name="BlocoSugestoes">
+                        <TextBlock Text="SUGESTÕES ENCONTRADAS NESTE PC" Style="{StaticResource Rotulo}"/>
+                        <ComboBox x:Name="CmbSugestoes" Height="38" SelectionChanged="CmbSugestoes_SelectionChanged"/>
+                        <TextBlock x:Name="TxtSugestoes" Style="{StaticResource Sub}" Margin="2,6,0,0" TextWrapping="Wrap"/>
+                    </StackPanel>
+
+                    <TextBlock Text="NOME" Style="{StaticResource Rotulo}"/>
+                    <TextBox x:Name="EdNomeJogo" MaxLength="255" Tag="Ex.: RetroArch, PCSX2, Hollow Knight"/>
+
+                    <TextBlock Text="PASTA DOS SAVES EM CADA APARELHO" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel x:Name="PainelPastas"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,8,0,0" TextWrapping="Wrap"
+                                       Text="Deixe vazio nos aparelhos que não têm esse jogo. O EmuSync guarda a pasta inteira (com as subpastas). No celular, a pasta é escolhida pelo app EmuSync Mobile."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="OPÇÕES" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="EdAutoSync" Style="{StaticResource Interruptor}" Content="Sincronizar sozinho (sync automático do EmuSync)"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,14,0,0">
+                                <TextBlock Text="Backups guardados neste PC" Width="220" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdMaxBackups" Width="90" MaxLength="3" Tag="padrão"/>
+                            </StackPanel>
+                            <TextBlock Style="{StaticResource Sub}" Margin="220,6,0,0" Text="Vazio = usa o padrão do aparelho (aba Configurar). 0 = não guardar backups."/>
+                        </StackPanel>
+                    </Border>
+
+                    <WrapPanel Margin="0,26,0,12">
+                        <Button x:Name="BtnSalvarJogo" Style="{StaticResource BtnPrimario}" Content="✔  Salvar" Click="BtnSalvarJogo_Click" Margin="0,0,8,8" ToolTip="Ctrl+S"/>
+                        <Button x:Name="BtnSalvarSincronizar" Style="{StaticResource BtnSecundario}" Content="🔄  Salvar e sincronizar" Click="BtnSalvarSincronizar_Click" Margin="0,0,8,8"/>
+                        <Button x:Name="BtnExcluirJogo" Style="{StaticResource BtnPerigo}" Content="🗑  Excluir jogo" Click="BtnExcluirJogo_Click" Margin="0,0,8,8"/>
+                    </WrapPanel>
+                </StackPanel>
+
+                <!-- ===== BACKUPS ===== -->
+                <StackPanel x:Name="PainelBackups" Visibility="Collapsed">
+                    <Button Style="{StaticResource BtnSecundario}" Content="←  Voltar" HorizontalAlignment="Left" Click="BtnVoltarLista_Click"/>
+                    <TextBlock x:Name="TxtTituloBackups" Text="Backups" FontSize="22" FontWeight="SemiBold" Margin="0,16,0,0"/>
+                    <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,14" TextWrapping="Wrap"
+                               Text="Cópias que o EmuSync guardou neste PC antes de baixar um save da nuvem. Restaurar volta o save deste PC para a cópia escolhida e envia para a nuvem, para os outros aparelhos receberem também."/>
+                    <StackPanel x:Name="ListaBackups"/>
+                </StackPanel>
+
+                <!-- ===== APARELHOS ===== -->
+                <StackPanel x:Name="PainelAparelhos" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource Sub}" Margin="2,0,0,12" TextWrapping="Wrap"
+                               Text="Todos os aparelhos ligados à mesma nuvem. Cada um tem a sua pasta de saves para cada jogo."/>
+                    <StackPanel x:Name="ListaAparelhos"/>
+                </StackPanel>
+
+                <!-- ===== HISTÓRICO ===== -->
+                <StackPanel x:Name="PainelHistorico" Visibility="Collapsed">
+                    <TextBlock Style="{StaticResource Sub}" Margin="2,0,0,12" Text="O que este PC enviou e baixou (mais recente primeiro)."/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel x:Name="ListaHistorico"/>
+                    </Border>
+                </StackPanel>
+
+                <!-- ===== CONFIGURAR ===== -->
+                <StackPanel x:Name="PainelConfigurar" Visibility="Collapsed">
+                    <TextBlock Text="NUVEM" Style="{StaticResource Rotulo}" Margin="0,0,0,8"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtProvedor" FontWeight="SemiBold" TextWrapping="Wrap"/>
+                            <TextBlock x:Name="TxtProvedorDet" Style="{StaticResource Sub}" Margin="0,4,0,0" TextWrapping="Wrap"/>
+                            <WrapPanel x:Name="BotoesProvedor" Margin="0,12,0,0">
+                                <Button Style="{StaticResource BtnPrimario}" Content="Google Drive" Tag="1" Click="BtnConectar_Click" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="Dropbox" Tag="2" Click="BtnConectar_Click" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="OneDrive" Tag="3" Click="BtnConectar_Click" Margin="0,0,8,8"/>
+                                <Button Style="{StaticResource BtnSecundario}" Content="Pasta da rede…" Tag="4" Click="BtnConectar_Click" Margin="0,0,8,8"/>
+                            </WrapPanel>
+                            <Border x:Name="BlocoPastaRede" Visibility="Collapsed" Background="{DynamicResource Surface2Brush}" CornerRadius="12" Padding="16,14" Margin="0,4,0,8">
+                                <StackPanel>
+                                    <StackPanel Orientation="Horizontal">
+                                        <TextBlock Text="Pasta" Width="110" VerticalAlignment="Center"/>
+                                        <TextBox x:Name="EdPastaRede" Width="380" Tag="\\NAS\saves  ou  D:\Saves"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="Usuário" Width="110" VerticalAlignment="Center"/>
+                                        <TextBox x:Name="EdUsuarioRede" Width="240" Tag="opcional"/>
+                                    </StackPanel>
+                                    <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                        <TextBlock Text="Senha" Width="110" VerticalAlignment="Center"/>
+                                        <PasswordBox x:Name="EdSenhaRede" Width="240" Height="36"/>
+                                    </StackPanel>
+                                    <Button Style="{StaticResource BtnPrimario}" Content="Conectar à pasta" HorizontalAlignment="Left" Margin="110,12,0,0" Click="BtnConectarPastaRede_Click"/>
+                                    <TextBlock Style="{StaticResource Sub}" Margin="110,6,0,0" TextWrapping="Wrap" Text="A senha vai direto para o EmuSync deste PC; o GameModeHub não guarda."/>
+                                </StackPanel>
+                            </Border>
+                            <Button x:Name="BtnDesconectar" Style="{StaticResource BtnPerigo}" Content="Desconectar a nuvem deste PC" HorizontalAlignment="Left" Click="BtnDesconectar_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="ESTE PC" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Nome do aparelho" Width="220" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdNomeAparelho" Width="260" MaxLength="100"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Sync automático a cada" Width="220" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdFrequencia" Width="90" MaxLength="4"/>
+                                <TextBlock Text="minuto(s)" VerticalAlignment="Center" Margin="8,0,0,0"/>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                <TextBlock Text="Backups por jogo (padrão)" Width="220" VerticalAlignment="Center"/>
+                                <TextBox x:Name="EdBackupsPadrao" Width="90" MaxLength="3"/>
+                            </StackPanel>
+                            <Button Style="{StaticResource BtnPrimario}" Content="✔  Salvar" HorizontalAlignment="Left" Margin="0,14,0,0" Click="BtnSalvarAparelho_Click"/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="JUNTO COM O GAMEMODEHUB" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <CheckBox x:Name="ChkAoAtivar" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click"
+                                      Content="Ao ativar um modo, sincronizar antes (pega o save mais novo da nuvem)"/>
+                            <CheckBox x:Name="ChkAoRestaurar" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click" Margin="0,12,0,0"
+                                      Content="Ao restaurar o desktop, sincronizar (manda o save de quem acabou de jogar)"/>
+                            <CheckBox x:Name="ChkCombo" Style="{StaticResource Interruptor}" Click="ChkIntegracao_Click" Margin="0,12,0,0"
+                                      Content="Segurar LB + RB + Y (1,5 s) no controle sincroniza tudo"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="52,8,0,0" TextWrapping="Wrap"
+                                       Text="Pelo celular (app GameModeHub) e pela bandeja também dá para sincronizar tudo. Feche o jogo antes de sincronizar."/>
+                        </StackPanel>
+                    </Border>
+
+                    <TextBlock Text="PROCURA DE JOGOS (LUDUSAVI)" Style="{StaticResource Rotulo}"/>
+                    <Border Style="{StaticResource Card}">
+                        <StackPanel>
+                            <TextBlock x:Name="TxtVarredura" TextWrapping="Wrap"/>
+                            <TextBlock Style="{StaticResource Sub}" Margin="0,4,0,0" TextWrapping="Wrap"
+                                       Text="O EmuSync procura sozinho as pastas de save de milhares de jogos de PC. Elas aparecem como sugestões ao adicionar um jogo."/>
+                            <Button Style="{StaticResource BtnSecundario}" Content="🔍  Procurar agora" HorizontalAlignment="Left" Margin="0,12,0,0" Click="BtnVarrer_Click"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </StackPanel>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

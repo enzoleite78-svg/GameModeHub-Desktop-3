@@ -11,7 +11,7 @@
     <LangVersion>latest</LangVersion>
     <RootNamespace>GameModeHub</RootNamespace>
     <AssemblyName>GameModeHub</AssemblyName>
-    <Version>4.2.0</Version>
+    <Version>4.3.0</Version>
     <Product>GameModeHub</Product>
     <Description>GameModeHub Remaster — modos de jogo para PC + controle pelo celular</Description>
     <ApplicationManifest>app.manifest</ApplicationManifest>

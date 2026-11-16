@@ -66,6 +66,15 @@ namespace GameModeHub.Services
                 Log.Info("Ativando modo: " + m.Nome);
                 var c = ConfigService.Atual;
 
+                // 0) NOVO 4.3 (addon EmuSync): pega os saves mais novos da nuvem antes de abrir o jogo
+                if (c.AddonEmuSync && c.EmuSyncAoAtivarModo)
+                {
+                    Trabalhando?.Invoke("Sincronizando saves antes de “" + m.Nome + "”…");
+                    var s = EmuSyncAddon.SincronizarParaModo(true);
+                    if (s != null) r.Passos.Add(s);
+                    Trabalhando?.Invoke("Ativando “" + m.Nome + "”…");
+                }
+
                 // 1) fecha só o que o perfil manda, guardando o que foi fechado
                 var perfil = ConfigService.Perfil;
                 var manter = perfil.AppsFixados.Where(a => a.ManterAberto).Select(a => Path.GetFileNameWithoutExtension(a.Exe));
@@ -196,6 +205,14 @@ namespace GameModeHub.Services
                 if (reabertos > 0) r.Passos.Add($"{reabertos} app(s) reaberto(s)");
 
                 InputService.LiberarCursor();
+
+                // 8) NOVO 4.3 (addon EmuSync): manda para a nuvem o save de quem acabou de jogar
+                if (c.AddonEmuSync && c.EmuSyncAoRestaurar)
+                {
+                    Trabalhando?.Invoke("Sincronizando saves…");
+                    var s = EmuSyncAddon.SincronizarParaModo(false);
+                    if (s != null) r.Passos.Add(s);
+                }
 
                 _estado = new EstadoModo();
                 try { if (File.Exists(SnapshotFile)) File.Delete(SnapshotFile); } catch { }

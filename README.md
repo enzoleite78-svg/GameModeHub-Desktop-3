@@ -1,8 +1,8 @@
-# GameModeHub Desktop 4.2 · Remaster
+# GameModeHub Desktop 4.3 · Addons
 
 Controle de modos de jogo para o PC (telas, áudio, programas, energia, launcher) com o celular e o controle do Xbox como controle remoto.
 
-> O que mudou: **[MUDANCAS-4.2.md](MUDANCAS-4.2.md)** (app novo do celular) e **[MUDANCAS-4.1.md](MUDANCAS-4.1.md)** (remaster).
+> O que mudou: **[MUDANCAS-4.3.md](MUDANCAS-4.3.md)** (addons e EmuSync), **[MUDANCAS-4.2.md](MUDANCAS-4.2.md)** (app novo do celular) e **[MUDANCAS-4.1.md](MUDANCAS-4.1.md)** (remaster).
 > App do celular: use o **GameModeHub Mobile 5.0** (o app antigo não tem pareamento e não conecta).
 
 ## Como gerar o .exe (sem instalar nada no seu PC)
@@ -53,12 +53,22 @@ O cartão **✨ Primeiros passos** na tela Início guia você por estes itens e 
 | ◀ (1,5 s) | Fecha o jogo travado em foco e solta o mouse |
 | ▶ | Troca a saída de áudio A ⇄ B |
 | ▲ / ▼ | Volume +5% / −5% |
+| Y (1,5 s) | Sincroniza os saves (com o addon EmuSync ativo) |
+
+## Addon EmuSync
+
+Em **Geral → Addons**, ative o [EmuSync](https://github.com/emu-sync/EmuSync). Ele sincroniza os saves dos emuladores e jogos pela nuvem.
+
+- Use **Baixar e instalar** para baixar o instalador oficial, ou **Já tenho instalado** se ele já estiver no PC.
+- Depois disso aparece a aba **EmuSync** na barra lateral, com jogos, backups, aparelhos, histórico e configurações.
+
+O EmuSync continua sendo um programa à parte, de outro autor. O GameModeHub só conversa com o serviço dele (`EmuSyncAgent`) em `localhost:5353`.
 
 ## Rotas do servidor (para o app do celular)
 
 Todas exigem o cabeçalho `X-GMH-Token` (ou `?t=`), exceto `/ping` e `/pair`. Requisições com cabeçalho `Origin` (sites) são bloqueadas; só aceita a rede local.
 
-`/ping` · `/pair?code=123456&nome=Celular` · `/status` · `/apps` · `/modo/{id}` · `/restaurar` · `/audio/toggle` · `/audio/saida?slot=A|B` · `/audio/volume?v=0-100` (ou `?d=±5`) · `/audio/mudo` (ou `?v=0|1`) · `/kill?exe=nome` (sem `exe` = jogo em foco) · `/kill/ativo` · `/alttab` · `/janela/focar?exe=nome` (abre se estiver fechado) · `/mouse/move?dx=&dy=` · `/mouse/click?btn=left|right|middle&duplo=1` · `/mouse/scroll?d=` · `/mouse/zoom?d=` · `/teclado?texto=` ou `?tecla=enter|backspace|tab|esc|f1…f24|altf4|desktop|...` · `/tv` · `/perfis` · `/perfil?id=` · `/suspender` · `/desligar` · `/reiniciar`
+`/ping` · `/pair?code=123456&nome=Celular` · `/status` · `/apps` · `/modo/{id}` · `/restaurar` · `/audio/toggle` · `/audio/saida?slot=A|B` · `/audio/volume?v=0-100` (ou `?d=±5`) · `/audio/mudo` (ou `?v=0|1`) · `/kill?exe=nome` (sem `exe` = jogo em foco) · `/kill/ativo` · `/alttab` · `/janela/focar?exe=nome` (abre se estiver fechado) · `/mouse/move?dx=&dy=` · `/mouse/click?btn=left|right|middle&duplo=1` · `/mouse/scroll?d=` · `/mouse/zoom?d=` · `/teclado?texto=` ou `?tecla=enter|backspace|tab|esc|f1…f24|altf4|desktop|...` · `/tv` · `/perfis` · `/perfil?id=` · `/suspender` · `/desligar` · `/reiniciar` · `/emusync` · `/emusync/sync[?id=]` · `/emusync/enviar?id=` e `/emusync/baixar?id=` (POST)
 
 **Compatível com o app antigo do celular:** também aceita `nivel`, `nome`, `dy`, `delta` e `cmd` (nomes de parâmetro da v3).
 

@@ -40,7 +40,7 @@ namespace GameModeHub.Server
 
         // ações que mudam muito o PC: só por POST (um link aberto sem querer não desliga nada)
         private static readonly HashSet<string> SoPost = new(StringComparer.OrdinalIgnoreCase)
-            { "/desligar", "/reiniciar", "/suspender", "/kill", "/kill/ativo", "/timer", "/arquivo" };
+            { "/desligar", "/reiniciar", "/suspender", "/kill", "/kill/ativo", "/timer", "/arquivo", "/emusync/enviar", "/emusync/baixar" };
 
         public string CodigoPareamento
         {
@@ -278,6 +278,61 @@ namespace GameModeHub.Server
 
         private static bool Tem(Req r, params string[] nomes) => nomes.Any(n => r.Query.ContainsKey(n));
 
+        /// <summary>
+        /// NOVO 4.3: o app do celular vê e comanda os saves do EmuSync deste PC.
+        /// /emusync → estado e lista · /emusync/sync[?id=] → sincroniza um jogo ou todos ·
+        /// /emusync/enviar?id= e /emusync/baixar?id= (POST) → forçar envio/download.
+        /// </summary>
+        private async Task<Resp> RotaEmuSync(string rota, string id)
+        {
+            if (!ConfigService.Atual.AddonEmuSync) return new Resp(404, Json(new { ok = false, erro = "addon EmuSync desativado no PC (Geral → Addons)" }));
+            if (!await EmuSyncClient.Online()) return new Resp(503, Json(new { ok = false, erro = "o EmuSync não está respondendo no PC" }));
+            try
+            {
+                switch (rota)
+                {
+                    case "/emusync":
+                        {
+                            var local = await EmuSyncClient.Local();
+                            var jogos = local.Provedor == EsProvedor.Nenhum ? new List<EsJogo>() : await EmuSyncClient.Jogos();
+                            return Ok(new
+                            {
+                                ok = true,
+                                aparelho = local.Nome,
+                                nuvem = Views.EmuSyncPage.NomeProvedor(local.Provedor),
+                                conectado = local.Provedor != EsProvedor.Nenhum,
+                                sincronizando = EmuSyncClient.SincronizandoTudo,
+                                jogos = jogos.Select(j => new
+                                {
+                                    id = j.Id,
+                                    nome = j.Nome,
+                                    temPasta = !string.IsNullOrWhiteSpace(j.PastaDe(local.Id)),
+                                    status = j.Status switch { EsStatus.EmDia => "em_dia", EsStatus.PrecisaEnviar => "enviar", EsStatus.PrecisaBaixar => "baixar", EsStatus.SemPasta => "sem_pasta", _ => "desconhecido" },
+                                    auto = j.AutoSync,
+                                    ultimoSync = j.UltimoSyncUtc,
+                                    bytes = j.Bytes
+                                })
+                            });
+                        }
+                    case "/emusync/sync":
+                        if (string.IsNullOrWhiteSpace(id))
+                        {
+                            var res = await EmuSyncAddon.SincronizarTudoComAviso("Pelo celular");
+                            Marcar("Saves sincronizados");
+                            return Ok(new { ok = res != null && res.Falhas == 0, resumo = res?.Resumo ?? "não foi possível sincronizar", erros = res?.Erros ?? new List<string>() });
+                        }
+                        await EmuSyncClient.Sincronizar(id);
+                        break;
+                    case "/emusync/enviar": await EmuSyncClient.ForcarEnvio(id); break;
+                    case "/emusync/baixar": await EmuSyncClient.ForcarDownload(id); break;
+                }
+                Marcar("Save: " + rota.Substring(9));
+                EmuSyncAddon.NotificarSync();
+                return Ok(new { ok = true });
+            }
+            catch (EmuSyncException ex) { return new Resp(ex.Codigo == 404 ? 404 : 502, Json(new { ok = false, erro = ex.Message })); }
+        }
+
         private bool TokenValido(Req r)
         {
             string t = null;
@@ -442,6 +497,13 @@ namespace GameModeHub.Server
                         var ok = TimerService.Agendar(Str(r, "acao"), Int(r, 30, "min", "minutos"));
                         return Ok(new { ok, acao = TimerService.Acao, segundos = TimerService.SegundosRestantes });
                     }
+                // ---- addon EmuSync (NOVO 4.3) ----
+                case "/emusync":
+                case "/emusync/sync":
+                case "/emusync/enviar":
+                case "/emusync/baixar":
+                    return await RotaEmuSync(rota, Str(r, "id"));
+
                 case "/tv": PedirModoTv?.Invoke(); Marcar("Modo TV"); return Ok(new { ok = true });
                 case "/perfis": return Ok(new { ativo = cfg.PerfilAtivo, perfis = cfg.Perfis.ToList().Select(kv => new { id = kv.Key, nome = kv.Value.Nome }) });
                 case "/perfil":

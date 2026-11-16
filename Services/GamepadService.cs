@@ -15,7 +15,7 @@ namespace GameModeHub.Services
     }
 
     /// <summary>Atalhos globais do controle (segurando LB + RB). Funcionam dentro do jogo.</summary>
-    public enum ComboControle { ModoPadrao, Restaurar, FecharJogo, TrocarAudio, VolumeMais, VolumeMenos }
+    public enum ComboControle { ModoPadrao, Restaurar, FecharJogo, TrocarAudio, VolumeMais, VolumeMenos, SincronizarSaves }
 
     /// <summary>XInput direto (sem SharpDX): qualquer controle (slots 0-3), botão Guia, repetição ao segurar, combos e vibração.</summary>
     public sealed class GamepadService : IDisposable
@@ -132,6 +132,7 @@ namespace GameModeHub.Services
                         Segurar(b, (ushort)Botao.Start, 2000, ComboControle.ModoPadrao, segurandoDesde, disparados);
                         Segurar(b, (ushort)Botao.Back, 1500, ComboControle.Restaurar, segurandoDesde, disparados);
                         Segurar(b, (ushort)Botao.Esq, 1500, ComboControle.FecharJogo, segurandoDesde, disparados);
+                        Segurar(b, (ushort)Botao.Y, 1500, ComboControle.SincronizarSaves, segurandoDesde, disparados);   // NOVO 4.3 (addon EmuSync)
                         repetindo = 0;
                     }
                     else

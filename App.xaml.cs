@@ -197,6 +197,12 @@ namespace GameModeHub
                             break;
                         }
                     case ComboControle.Restaurar: ModeService.Restaurar(); break;
+                    case ComboControle.SincronizarSaves:
+                        // NOVO 4.3: LB + RB + Y (1,5 s) — addon EmuSync
+                        if (!ConfigService.Atual.AddonEmuSync || !ConfigService.Atual.EmuSyncComboControle) break;
+                        Controle?.Vibrar(180);
+                        EmuSyncAddon.SincronizarTudoComAviso("Pelo controle").Wait(TimeSpan.FromMinutes(10));
+                        break;
                     case ComboControle.FecharJogo: Controle?.Vibrar(300); FecharJogoTravado(); break;
                     case ComboControle.TrocarAudio:
                         {
@@ -301,12 +307,17 @@ namespace GameModeHub
                 var n = AudioService.Alternar();
                 ToastWindow.Mostrar("Áudio", n ?? "Saída não encontrada — configure em Geral → Saídas de áudio", n != null ? "🔊" : "⚠");
             }));
+            if (ConfigService.Atual.AddonEmuSync)   // NOVO 4.3
+                Item("🔄   Sincronizar saves (EmuSync)", () => Task.Run(() => EmuSyncAddon.SincronizarTudoComAviso("Pela bandeja")));
             Item("📺   Modo TV (tela cheia)", AbrirTv);
             Item("💡   Acender todas as telas", () => Task.Run(() => { var r = DisplayService.AcenderTodas(); ToastWindow.Mostrar(r.ok ? "Todas as telas acesas" : "Não consegui", r.msg, r.ok ? "💡" : "⚠"); }));
             menu.Items.Add(new Separator());
             Item("Abrir GameModeHub", MostrarPrincipal);
             Item("Sair", Sair);
         }
+
+        /// <summary>NOVO 4.3: um addon foi ativado/desativado — atualiza o que depende dele (menu da bandeja).</summary>
+        public static void AddonsMudaram() => Current?.Dispatcher.BeginInvoke(new Action(MontarMenuBandeja));
 
         public static void Sair()
         {

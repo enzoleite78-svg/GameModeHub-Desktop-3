@@ -46,6 +46,11 @@ namespace GameModeHub.Core
         public int Porta { get; set; } = 5050;
         public List<string> ProgramasIgnorados { get; set; } = new();  // NOVO 4.2: "Ignorar" na varredura da tela Programas
         public bool PermitirVpn { get; set; } = false;           // NOVO 4.2: aceitar celular via Tailscale/ZeroTier (100.64.0.0/10)
+        // NOVO 4.3: addon EmuSync (sincronização de saves; o EmuSync oficial roda à parte e o app conversa com ele)
+        public bool AddonEmuSync { get; set; } = false;
+        public bool EmuSyncAoAtivarModo { get; set; } = true;     // sincroniza antes de ativar um modo (pega o save mais novo)
+        public bool EmuSyncAoRestaurar { get; set; } = true;      // sincroniza ao restaurar o desktop (manda o save do jogo)
+        public bool EmuSyncComboControle { get; set; } = true;    // LB + RB + Y (1,5 s) sincroniza tudo
         public string Token { get; set; } = "";                   // gerado no 1º uso (atalhos da área de trabalho usam este)
         public List<DispositivoPareado> Pareados { get; set; } = new();
         public Dictionary<string, string> TelasConhecidas { get; set; } = new();
